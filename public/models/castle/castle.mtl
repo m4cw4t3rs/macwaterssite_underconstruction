@@ -1,0 +1,64 @@
+newmtl Tower2_LOD0SG
+illum 4
+Kd 1.00 1.00 1.00
+Ka 1.00 1.00 1.00
+Tf 1.00 1.00 1.00
+map_Kd wall3_Albedo.png
+bump  -bm 1 wall3_Normal.png
+Ni 1.00
+newmtl Tower2_LOD0SG1
+illum 4
+Kd 1.00 1.00 1.00
+Ka 1.00 1.00 1.00
+Tf 1.00 1.00 1.00
+map_Kd Concrete036D_Albedo.png
+bump  -bm 1 Concrete036D_Normal.png
+Ni 1.00
+newmtl Tower2_LOD0SG2
+illum 4
+Kd 1.00 1.00 1.00
+Ka 1.00 1.00 1.00
+Tf 1.00 1.00 1.00
+map_Kd Rock042L_4K_Color.png
+bump  -bm 1 Rock042L_4K_NormalDX.png
+Ni 1.00
+newmtl Tower2_LOD0SG3
+illum 4
+Kd 1.00 1.00 1.00
+Ka 1.00 1.00 1.00
+Tf 1.00 1.00 1.00
+map_Kd Rock012_2K_Color.png
+bump  -bm 0 Rock012_2K_NormalDX.png
+Ni 1.00
+newmtl Tower2_LOD0SG4
+illum 4
+Kd 1.00 1.00 1.00
+Ka 1.00 1.00 1.00
+Tf 1.00 1.00 1.00
+map_Kd Planks012_4K_Color.png
+bump  -bm 1 Planks012_4K_NormalDX.png
+Ni 1.00
+newmtl Tower2_Roof_LOD0SG
+illum 4
+Kd 1.00 1.00 1.00
+Ka 1.00 1.00 1.00
+Tf 1.00 1.00 1.00
+map_Kd grey_roof_tiles_diff_4k.png
+bump  -bm 1 grey_roof_tiles_nor_gl_4k.png
+Ni 1.00
+newmtl Tower2_Roof_LOD0SG1
+illum 4
+Kd 1.00 1.00 1.00
+Ka 1.00 1.00 1.00
+Tf 1.00 1.00 1.00
+map_Kd Metal024_4K_Color.png
+bump  -bm 1 Metal024_4K_Normal.png
+Ni 1.00
+newmtl Tower3_LOD0SG
+illum 4
+Kd 1.00 1.00 1.00
+Ka 1.00 1.00 1.00
+Tf 1.00 1.00 1.00
+map_Kd wood_Albedo.png
+bump  -bm 1 wood_Normal.png
+Ni 1.00

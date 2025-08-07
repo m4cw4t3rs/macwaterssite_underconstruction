@@ -1,0 +1,63 @@
+.marquee-container {
+  width: 100vw;
+  overflow: hidden;
+  position: fixed;  /* or absolute, if not always on top */
+  bottom: 20px;     /* position at bottom, change as needed */
+  left: 0;
+  display: flex;
+  overflow: hidden;
+  z-index: 5000;    /* ensures it shows on top */
+  pointer-events: none; /* so it doesn't block mouse clicks */
+  background: none; /* transparent, or style as you want */
+}
+
+.marquee-text {
+  display: inline-block;
+  font-family: arial;
+  font-style: italic;
+  letter-spacing: 10px;
+  font-size: 1rem;      /* change size as needed */
+  white-space: nowrap;
+  animation: marquee 20s linear infinite;
+  color: #ffffff;          /* your choice */
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+#bio-block {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  max-width: 500px;
+  padding: 2rem;
+  background: rgba(207, 192, 192, 0.5); /* translucent box */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  color: white;
+  font-family: sans-serif;
+  font-size: 1.2rem;
+  font-style: italic;
+  text-align: center;
+  backdrop-filter: blur(8px); /* optional: adds frosted-glass effect */
+}
+
+#bio-block a {
+  color: lightblue;
+  text-decoration: none;
+  font-style: italic;
+}
+
+#bio-block a:hover {
+  text-decoration: underline;
+}
+
+
