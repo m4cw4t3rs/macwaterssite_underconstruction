@@ -19,6 +19,8 @@ import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { depth } from 'three/src/nodes/TSL.js';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import {MTLLoader} from 'three/addons/loaders/MTLLoader.js';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {DRACOLoader} from 'three/addons/loaders/DRACOLoader.js';
 import { max } from 'three/tsl';
 import { HemisphereLight } from 'three/webgpu';
 //import { FBXLoader } from 'three/examples/jsm/Addons.js';
@@ -28,10 +30,27 @@ let isDragging = false;
 let previousMousePosition = { x: 0, y: 0 };
 let spinVelocity = { x: 0, y: 0 };
 let textMesh;
-let castleModel;
 let textFloatTime = 0; // will accumulate animation time
 let floatingTextIdx = null; // the index of the active floating text
 
+// --- Base-aware asset helper -----------------------------------------------
+// Works with Vite's base (e.g. "/macwaterssite_underconstruction/") or "/"
+const BASE = import.meta.env.BASE_URL || '/';
+
+const asset = (rel) => {
+  const b = BASE.endsWith('/') ? BASE : BASE + '/';
+  const r = rel.startsWith('/') ? rel.slice(1) : rel;
+  return b + r;
+};
+// ---------------------------------------------------------------------------
+
+// Draco
+const gltfLoader  = new GLTFLoader();
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath(asset('draco/')); // serves /<base>/draco/*
+gltfLoader.setDRACOLoader(dracoLoader);
+
+// Scene setup, mostly unchanged
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.5, 1000 );
 const renderer = new THREE.WebGLRenderer({ alpha: true });
@@ -39,13 +58,13 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 renderer.setClearColor(0x000000, 0); // 0 alpha for transparency
 camera.position.z = 50;
 
-// const zones = [
-//   { name: "home",  start: 0, hold: 0, cameraZ: 50 },
-//   { name: "menu",  start: window.innerHeight * 2, hold: window.innerHeight * 0.8, cameraZ: 150 },
-//   { name: "about", start: window.innerHeight * 3, hold: window.innerHeight * 0.8, cameraZ: 250 },
-//   { name: "work",  start: window.innerHeight * 4, hold: window.innerHeight * 0.8, cameraZ: 350 },
-//   { name: "social",start: window.innerHeight * 5, hold: window.innerHeight * 0.8, cameraZ: 450 },
-// ];
+const zones = [
+  { name: "home",  start: 0, hold: 0, cameraZ: 50 },
+  { name: "menu",  start: window.innerHeight * 2, hold: window.innerHeight * 0.8, cameraZ: 150 },
+  { name: "about", start: window.innerHeight * 3, hold: window.innerHeight * 0.8, cameraZ: 250 },
+  { name: "work",  start: window.innerHeight * 4, hold: window.innerHeight * 0.8, cameraZ: 350 },
+  { name: "social",start: window.innerHeight * 5, hold: window.innerHeight * 0.8, cameraZ: 450 },
+];
 
 
 const gradientBg = document.createElement('div');
@@ -120,20 +139,41 @@ scene.fog = new THREE.Fog( 0x231f1f, 50, 75 );
 const objLoader = new OBJLoader();
 const mtlLoader = new MTLLoader();
 
-mtlLoader.load('/models/castle/castle.mtl', (mtl) => {
-  mtl.preload();
-  objLoader.setMaterials(mtl);
-  objLoader.load('/models/castle/castle4.obj', (root) => {
-    root.scale.set(2.9, 2.9, 2.9);
-    root.position.set(0, -5, 0);
-    root.rotation.set(0, 150, 0);
-    castleModel = root;
-    scene.add(root);
-  });
-});
+
+// Castle model (Draco GLB)
+const MODEL_URL = asset('models/castle/castle_web.glb');
+let castleModel = null;
+gltfLoader.load(
+  MODEL_URL,
+  (gltf) => {
+    castleModel = gltf.scene;
+    castleModel.scale.setScalar(1);
+    castleModel.position.set(0, -5, 0);
+    castleModel.scale.set(2.9, 2.9, 2.9);
+    castleModel.rotation.set(0, 150, 0);
+    scene.add(castleModel);
+    console.log('castle loaded ✅');
+  },
+  (e) => { if (e.lengthComputable) console.log(`loading: ${(100*e.loaded/e.total).toFixed(1)}%`); },
+  (err) => console.error('failed to load castle:', err)
+);
 
 
-objLoader.load('/models/macwaters_text.obj', (object) => {
+
+// mtlLoader.load('/models/castle/castle.mtl', (mtl) => {
+//   mtl.preload();
+//   objLoader.setMaterials(mtl);
+//   objLoader.load('/models/castle/castle.obj', (root) => {
+//     root.scale.set(2.9, 2.9, 2.9);
+//     root.position.set(0, -5, 0);
+//     root.rotation.set(0, 150, 0);
+//     castleModel = root;
+//     scene.add(root);
+//   });
+// });
+
+//MACWATERS text model/header
+objLoader.load('models/macwaters_text.obj', (object) => {
   object.traverse((child) => {
     if (child.isMesh) {
         child.material = new THREE.MeshPhongMaterial({
@@ -174,57 +214,59 @@ const endCastleZ = -50;
 
 const maxScroll = 1000; //pixels over which scaling occurs
 
-// window.addEventListener('scroll', () => {
-//   if (textMesh && castleModel && cube1 && cube2 && cube3) {
-//     const scrollY = window.scrollY || window.pageYOffset;
-//     const progress = Math.min(scrollY / maxScroll, 1);
+window.addEventListener('scroll', () => {
+  if (textMesh && castleModel && cube1 && cube2 && cube3) {
+    const scrollY = window.scrollY || window.pageYOffset;
+    const progress = Math.min(scrollY / maxScroll, 1);
 
-//     const textScale = maxtextScale - progress * (maxtextScale - mintextScale);
-//     //const castleScale = maxcastleScale - progress * (maxcastleScale - mincastleScale);
-//     const textZ = startTextZ - progress * (startTextZ - endTextZ);
-//     const textY = startTextY + progress * (endTextY - startTextY);
-//     const castleZ = startCastleZ - progress * (startCastleZ - endCastleZ);
-//     const cubeZ = startCubeZ - progress * (startCubeZ - endCubeZ);
+    const textScale = maxtextScale - progress * (maxtextScale - mintextScale);
+    //const castleScale = maxcastleScale - progress * (maxcastleScale - mincastleScale);
+    const textZ = startTextZ - progress * (startTextZ - endTextZ);
+    const textY = startTextY + progress * (endTextY - startTextY);
+    const castleZ = startCastleZ - progress * (startCastleZ - endCastleZ);
+    const cubeZ = startCubeZ - progress * (startCubeZ - endCubeZ);
    
 
    
 
-//     textMesh.position.z = textZ;
-//     textMesh.position.y = textY;
-//     castleModel.position.z = castleZ;
-//     cube1.position.z = cubeZ;
-//     cube2.position.z = cubeZ;
-//     cube3.position.z = cubeZ;
+    textMesh.position.z = textZ;
+    textMesh.position.y = textY;
+    castleModel.position.z = castleZ;
+    cube1.position.z = cubeZ;
+    cube2.position.z = cubeZ;
+    cube3.position.z = cubeZ;
     
     
-//   }
-// });
+  }
+});
+
+
 let scrollTimeout;
 let targetCameraZ = camera.position.z;
 
-// window.addEventListener('scroll', () => {
-//   clearTimeout(scrollTimeout);
-//   const scrollY = window.scrollY;
+window.addEventListener('scroll', () => {
+  clearTimeout(scrollTimeout);
+  const scrollY = window.scrollY;
 
-//   for (let i = 0; i < zones.length; i++) {
-//     const z = zones[i];
-//     const nextStart = zones[i + 1]?.start ?? Infinity;
+  for (let i = 0; i < zones.length; i++) {
+    const z = zones[i];
+    const nextStart = zones[i + 1]?.start ?? Infinity;
 
-//     if (scrollY >= z.start && scrollY < nextStart) {
-//       // === Sticky hold ===
-//       if (scrollY <= z.start + z.hold) {
-//         targetCameraZ = z.cameraZ;
-//       }
-//       // === Transition to next zone ===
-//       else {
-//         const progress = (scrollY - (z.start + z.hold)) / (nextStart - (z.start + z.hold));
-//         const nextZ = zones[i + 1]?.cameraZ ?? z.cameraZ;
-//         targetCameraZ = THREE.MathUtils.lerp(z.cameraZ, nextZ, progress);
-//       }
-//       break;
-//     }
-//   }
-// });
+    if (scrollY >= z.start && scrollY < nextStart) {
+      // === Sticky hold ===
+      if (scrollY <= z.start + z.hold) {
+        targetCameraZ = z.cameraZ;
+      }
+      // === Transition to next zone ===
+      else {
+        const progress = (scrollY - (z.start + z.hold)) / (nextStart - (z.start + z.hold));
+        const nextZ = zones[i + 1]?.cameraZ ?? z.cameraZ;
+        targetCameraZ = THREE.MathUtils.lerp(z.cameraZ, nextZ, progress);
+      }
+      break;
+    }
+  }
+});
 
 
 
@@ -264,7 +306,7 @@ renderer.domElement.addEventListener('mouseup', function(e) {
 const fontLoader = new FontLoader();
 let cubeTexts = [] // store [mesh, text] pairs
 
-fontLoader.load('/fonts/Old London_Regular.json', (font) => {
+fontLoader.load(asset('/fonts/Old London_Regular.json'), (font) => {
   const texts = [
     {label: "about", color: 0xff0000},
     {label: "work", color: 0x00ff00},
