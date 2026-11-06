@@ -1,525 +1,560 @@
-// === Responsive resize: keep canvas centered and update camera ===
-window.addEventListener('resize', () => {
-  const width = window.innerWidth;
-  const height = window.innerHeight;
-  renderer.setSize(width, height);
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
-});
-// main.js
-// Entry point for your three.js experiments
-
-console.log('Three.js experiments project is ready!');
-// Import three.js like this:
-// import * as THREE from 'three';
+// main.js — Mac Waters 3D site
+//
+// Two layers are drawn every frame:
+//   1. the main 3D scene (castle, title, and later the about/work stations)
+//   2. a "HUD" overlay with the small nav cubes, pinned to the screen
 
 import * as THREE from 'three';
-import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
-import { depth } from 'three/src/nodes/TSL.js';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
-import {MTLLoader} from 'three/addons/loaders/MTLLoader.js';
-import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
-import {DRACOLoader} from 'three/addons/loaders/DRACOLoader.js';
-import { max } from 'three/tsl';
-import { HemisphereLight } from 'three/webgpu';
-//import { FBXLoader } from 'three/examples/jsm/Addons.js';
-//import { OrbitControls } from 'three/examples/jsm/Addons.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { initDraggables } from './drag.js';
 
-let isDragging = false;
-let previousMousePosition = { x: 0, y: 0 };
-let spinVelocity = { x: 0, y: 0 };
-let textMesh;
-let textFloatTime = 0; // will accumulate animation time
-let floatingTextIdx = null; // the index of the active floating text
+initDraggables(); // windows + pngs marked data-drag in index.html
 
-// --- Base-aware asset helper -----------------------------------------------
-// Works with Vite's base (e.g. "/macwaterssite_underconstruction/") or "/"
+const CONTACT_EMAIL = 'macarthur.waters@gmail.com';
+
+// --- Asset paths (works with any Vite "base") -------------------------------
 const BASE = import.meta.env.BASE_URL || '/';
-
 const asset = (rel) => {
   const b = BASE.endsWith('/') ? BASE : BASE + '/';
   const r = rel.startsWith('/') ? rel.slice(1) : rel;
   return b + r;
 };
-// ---------------------------------------------------------------------------
 
-// Draco
-const gltfLoader  = new GLTFLoader();
-const dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath(asset('draco/')); // serves /<base>/draco/*
-gltfLoader.setDRACOLoader(dracoLoader);
-
-// Scene setup, mostly unchanged
+// --- Renderer, scene, camera -------------------------------------------------
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.5, 1000 );
-const renderer = new THREE.WebGLRenderer({ alpha: true });
-renderer.setSize( window.innerWidth, window.innerHeight );
-renderer.setClearColor(0x000000, 0); // 0 alpha for transparency
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.5, 1000);
 camera.position.z = 50;
 
-const zones = [
-  { name: "home",  start: 0, hold: 0, cameraZ: 50 },
-  { name: "menu",  start: window.innerHeight * 2, hold: window.innerHeight * 0.8, cameraZ: 150 },
-  { name: "about", start: window.innerHeight * 3, hold: window.innerHeight * 0.8, cameraZ: 250 },
-  { name: "work",  start: window.innerHeight * 4, hold: window.innerHeight * 0.8, cameraZ: 350 },
-  { name: "social",start: window.innerHeight * 5, hold: window.innerHeight * 0.8, cameraZ: 450 },
-];
+const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x000000, 0); // transparent, so the CSS gradient shows through
+renderer.autoClear = false;           // we clear manually so we can draw two layers
+renderer.domElement.id = 'three-canvas';
 
-
+// --- Background gradient (plain CSS behind the canvas) -----------------------
 const gradientBg = document.createElement('div');
 gradientBg.id = 'gradient-bg';
-gradientBg.style.position = 'fixed';
-gradientBg.style.top = 0;
-gradientBg.style.left = 0;
-gradientBg.style.width = '100vw';
-gradientBg.style.height = '100vh';
-gradientBg.style.zIndex = 0;
-gradientBg.style.pointerEvents = 'none';
 document.body.appendChild(gradientBg);
-
-// Renderer setup, unchanged
-// renderer.domElement.style.position = 'relative';
-renderer.domElement.style.zIndex = 1;
-renderer.domElement.id = 'three-canvas';
 document.body.appendChild(renderer.domElement);
 
-/**
- * Set a 6-color linear gradient with custom stops.
- * @param {string[]} colors - Array of 6 color hex codes.
- * @param {string[]} stops - Array of 6 stop positions (percentages, e.g. '0%', '16%', '33%', ...).
- **/
 function setGradientColors(colors, stops) {
-  if (colors.length !== 6 || stops.length !== 6) {
-    throw new Error('Provide exactly 6 colors and 6 stop positions');
-  }
-  // Build the CSS gradient string with stops
   const stopsString = colors.map((color, i) => `${color} ${stops[i]}`).join(', ');
   gradientBg.style.background = `linear-gradient(180deg, ${stopsString})`;
 }
+setGradientColors(
+  ['#FFFFFF', '#004CFF', '#7720FA', '#FFC525', '#FF8C00', '#FF0000'],
+  ['0%', '35%', '51%', '62%', '69%', '83%']
+);
 
-// Example: six colors with even spacing
-const colors = ['#FFFFFF', '#004CFF', '#7720FA', '#FFC525', '#FF8C00', '#FF0000'];
-const stops = ['0%', '35%', '51%', '62%', '69%', '83%'];
-setGradientColors(colors, stops);
+// --- Scroll stations ---------------------------------------------------------
+// start/hold are measured in screen-heights of scrolling.
+// The camera eases to cameraZ and "holds" there for `hold` screens.
+const ZONE_DEFS = [
+  { name: 'home',  start: 0, hold: 0,   cameraZ: 50 },
+  { name: 'about', start: 2, hold: 0.8, cameraZ: 150 },
+  { name: 'work',  start: 3, hold: 0.8, cameraZ: 250 },
+];
+let zones = [];
 
-// To set uneven spacing, just change the stops array:
-    // e.g., ['0%', '10%', '25%', '60%', '90%', '100%']
+function buildZones() {
+  const h = window.innerHeight;
+  zones = ZONE_DEFS.map((z) => ({ ...z, start: z.start * h, hold: z.hold * h }));
 
+  // Make the page exactly tall enough to reach the last station.
+  const last = ZONE_DEFS[ZONE_DEFS.length - 1];
+  const spacer = document.getElementById('scroll-spacer');
+  if (spacer) spacer.style.height = `${(last.start + last.hold + 1) * 100}vh`;
+}
+buildZones();
 
+let targetCameraZ = camera.position.z;
 
+function updateCameraTarget() {
+  const scrollY = window.scrollY;
+  for (let i = 0; i < zones.length; i++) {
+    const z = zones[i];
+    const next = zones[i + 1];
+    const nextStart = next ? next.start : Infinity;
+    if (scrollY >= z.start && scrollY < nextStart) {
+      if (scrollY <= z.start + z.hold || !next) {
+        targetCameraZ = z.cameraZ;
+      } else {
+        const progress = (scrollY - (z.start + z.hold)) / (nextStart - (z.start + z.hold));
+        targetCameraZ = THREE.MathUtils.lerp(z.cameraZ, next.cameraZ, progress);
+      }
+      return;
+    }
+  }
+}
 
-const ambientLight = new THREE.AmbientLight(0xff9c9c, 1.5);
-scene.add(ambientLight);
+function scrollToZone(name) {
+  const z = zones.find((zone) => zone.name === name);
+  if (z) window.scrollTo({ top: z.start, behavior: 'smooth' });
+}
+
+// --- Lights ------------------------------------------------------------------
+scene.add(new THREE.AmbientLight(0xff9c9c, 1.5));
 
 const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
 directionalLight.position.set(-70, 60, 64);
-directionalLight.rotation.set(45, -45, 0);
 scene.add(directionalLight);
 
-const directionalLight2 = new THREE.DirectionalLight(0x111111, 2
-    
- );
+const directionalLight2 = new THREE.DirectionalLight(0x111111, 2);
 directionalLight2.position.set(40, 16.5, 0);
-directionalLight2.rotation.set(0, 180, 0);
 scene.add(directionalLight2);
-
 
 const directionalLight3 = new THREE.DirectionalLight(0xffffff, 2);
 directionalLight3.position.set(-100, 0, 50);
-directionalLight3.rotation.set(100, 0, 0);
 scene.add(directionalLight3);
 
-scene.fog = new THREE.Fog( 0x231f1f, 50, 75 );
+scene.fog = new THREE.Fog(0x231f1f, 50, 75);
 
+// --- Castle (Draco-compressed GLB) -------------------------------------------
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath(asset('draco/'));
+const gltfLoader = new GLTFLoader();
+gltfLoader.setDRACOLoader(dracoLoader);
 
-
-
-
-const objLoader = new OBJLoader();
-const mtlLoader = new MTLLoader();
-
-
-// Castle model (Draco GLB)
-const MODEL_URL = asset('models/castle/castle_web.glb');
 let castleModel = null;
 gltfLoader.load(
-  MODEL_URL,
+  asset('models/castle/castle_web.glb'),
   (gltf) => {
     castleModel = gltf.scene;
-    castleModel.scale.setScalar(1);
     castleModel.position.set(0, -5, 0);
-    castleModel.scale.set(2.9, 2.9, 2.9);
+    castleModel.scale.setScalar(2.9);
     castleModel.rotation.set(0, 150, 0);
     scene.add(castleModel);
-    console.log('castle loaded ✅');
   },
-  (e) => { if (e.lengthComputable) console.log(`loading: ${(100*e.loaded/e.total).toFixed(1)}%`); },
+  undefined,
   (err) => console.error('failed to load castle:', err)
 );
 
-
-
-// mtlLoader.load('/models/castle/castle.mtl', (mtl) => {
-//   mtl.preload();
-//   objLoader.setMaterials(mtl);
-//   objLoader.load('/models/castle/castle.obj', (root) => {
-//     root.scale.set(2.9, 2.9, 2.9);
-//     root.position.set(0, -5, 0);
-//     root.rotation.set(0, 150, 0);
-//     castleModel = root;
-//     scene.add(root);
-//   });
-// });
-
-//MACWATERS text model/header
-objLoader.load('models/macwaters_text.obj', (object) => {
+// --- MACWATERS title ---------------------------------------------------------
+let titleMesh = null;
+new OBJLoader().load(asset('models/macwaters_text.obj'), (object) => {
   object.traverse((child) => {
     if (child.isMesh) {
-        child.material = new THREE.MeshPhongMaterial({
-          color: 0x000000,
-          specular: 0xffffff,
-          shininess: 65,
-         
-
-        });
-      }
-  });
-  object.scale.set(0.4, 0.4, 0.4);
-  object.position.set(0, 16.5, 0);
-  object.rotation.set(0.3, 0 , 0);
-  scene.add(object);
-  textMesh = object;
-});
-
-
-const mintextScale = 0.4; //smallest allowed scale for textMesh
-const maxtextScale = 1.0; //largest allowed scale for textMesh
-
-const mincastleScale = 1.5; //smallest allowed scale for textMesh
-const maxcastleScale = 2.9; //largest allowed scale for textMesh
-
-const startCubeZ = 100;
-const endCubeZ = 0;
-
-const startTextZ = 0;
-const endTextZ = -20;
-
-const startTextY = 16.5;
-const endTextY =  30;
-
-const startCastleZ = 0;
-const endCastleZ = -50;
-
-
-const maxScroll = 1000; //pixels over which scaling occurs
-
-window.addEventListener('scroll', () => {
-  if (textMesh && castleModel && cube1 && cube2 && cube3) {
-    const scrollY = window.scrollY || window.pageYOffset;
-    const progress = Math.min(scrollY / maxScroll, 1);
-
-    const textScale = maxtextScale - progress * (maxtextScale - mintextScale);
-    //const castleScale = maxcastleScale - progress * (maxcastleScale - mincastleScale);
-    const textZ = startTextZ - progress * (startTextZ - endTextZ);
-    const textY = startTextY + progress * (endTextY - startTextY);
-    const castleZ = startCastleZ - progress * (startCastleZ - endCastleZ);
-    const cubeZ = startCubeZ - progress * (startCubeZ - endCubeZ);
-   
-
-   
-
-    textMesh.position.z = textZ;
-    textMesh.position.y = textY;
-    castleModel.position.z = castleZ;
-    cube1.position.z = cubeZ;
-    cube2.position.z = cubeZ;
-    cube3.position.z = cubeZ;
-    
-    
-  }
-});
-
-
-let scrollTimeout;
-let targetCameraZ = camera.position.z;
-
-window.addEventListener('scroll', () => {
-  clearTimeout(scrollTimeout);
-  const scrollY = window.scrollY;
-
-  for (let i = 0; i < zones.length; i++) {
-    const z = zones[i];
-    const nextStart = zones[i + 1]?.start ?? Infinity;
-
-    if (scrollY >= z.start && scrollY < nextStart) {
-      // === Sticky hold ===
-      if (scrollY <= z.start + z.hold) {
-        targetCameraZ = z.cameraZ;
-      }
-      // === Transition to next zone ===
-      else {
-        const progress = (scrollY - (z.start + z.hold)) / (nextStart - (z.start + z.hold));
-        const nextZ = zones[i + 1]?.cameraZ ?? z.cameraZ;
-        targetCameraZ = THREE.MathUtils.lerp(z.cameraZ, nextZ, progress);
-      }
-      break;
+      child.material = new THREE.MeshPhongMaterial({ color: 0x000000, specular: 0xffffff, shininess: 65 });
     }
+  });
+  object.scale.setScalar(0.4);
+  object.position.set(0, 16.5, 0);
+  object.rotation.set(0.3, 0, 0);
+  scene.add(object);
+  titleMesh = object;
+});
+
+// As you start scrolling, the title rises and the castle sinks back.
+const INTRO_SCROLL = 1000; // pixels over which this happens
+
+function updateIntroMotion() {
+  const progress = Math.min(window.scrollY / INTRO_SCROLL, 1);
+  if (titleMesh) {
+    titleMesh.position.z = THREE.MathUtils.lerp(0, -20, progress);
+    titleMesh.position.y = THREE.MathUtils.lerp(16.5, 30, progress);
   }
-});
-
-
-
-renderer.domElement.addEventListener('mousedown', function(e) {
-  isDragging = true;
-  previousMousePosition.x = e.clientX;
-  previousMousePosition.y = e.clientY;
-  spinVelocity.x = 0;
-  spinVelocity.y = 0;
-});
-
-renderer.domElement.addEventListener('mousemove', function(e) {
-  if (!isDragging) return;
-
-  const deltaX = e.clientX - previousMousePosition.x;
-  const deltaY = e.clientY - previousMousePosition.y;
-
   if (castleModel) {
-    castleModel.rotation.y += deltaX * 0.01;
-    //castleModel.rotation.x += deltaY * 0.01;
-
-    // Store velocity for inertia
-    //spinVelocity.x = deltaY * 0.01;
-    spinVelocity.y = deltaX * 0.01;
+    castleModel.position.z = THREE.MathUtils.lerp(0, -50, progress);
   }
+}
 
-  previousMousePosition.x = e.clientX;
-  previousMousePosition.y = e.clientY;
+// =============================================================================
+// ABOUT station — floating rose head + bio window (the window lives in index.html)
+// =============================================================================
+const ABOUT_Z = ZONE_DEFS.find((z) => z.name === 'about').cameraZ;
+const ROSE_DISTANCE = 30;             // how far in front of the camera it floats
+const aboutPanel = document.getElementById('about-panel');
+
+// Resting rotation, in degrees — use this to make the rose face forward.
+// The cursor-following is added on top of this.
+const ROSE_ROTATION = { x: 0, y: 180, z: 0 };
+
+const roseGroup = new THREE.Group(); // moves + follows the cursor
+const rosePivot = new THREE.Group(); // holds the fixed resting rotation
+roseGroup.add(rosePivot);
+const roseBase = new THREE.Vector3();
+let roseNativeHeight = 1;
+scene.add(roseGroup);
+
+function applyRoseRotation() {
+  const d = THREE.MathUtils.degToRad;
+  rosePivot.rotation.set(d(ROSE_ROTATION.x), d(ROSE_ROTATION.y), d(ROSE_ROTATION.z));
+}
+
+// Rose head colors — change these freely. Keys are the material names
+// inside rose_head_2.obj; the comment says which part each one is.
+const ROSE_COLORS = {
+  aiStandardSurface1SG1: '#c8102e', // petals
+  aiStandardSurface2SG1: '#0a0a0a', // eyeballs
+  aiStandardSurface3SG1: '#f2f2f2', // irises
+  aiStandardSurface4SG1: '#2f6b2a', // petal base
+  aiStandardSurface5SG1: '#3f8f3a', // neck leaves
+  aiStandardSurface7SG1: '#2e6b2b', // leaf stems
+};
+const ROSE_ROUGHNESS = 0.55; // 0 = glossy, 1 = matte
+
+const roseMaterials = {};
+function roseMaterial(name) {
+  if (!roseMaterials[name]) {
+    roseMaterials[name] = new THREE.MeshStandardMaterial({
+      name,
+      color: ROSE_COLORS[name] || '#ff00ff', // bright pink = a part with no color set
+      roughness: ROSE_ROUGHNESS,
+      metalness: 0,
+      side: THREE.DoubleSide, // petals are single sheets, so draw both faces
+    });
+  }
+  return roseMaterials[name];
+}
+
+new OBJLoader().load(asset('models/rose_head_2.obj'), (rose) => {
+  // Swap in our own materials (a mesh can have one material or a list of them).
+  rose.traverse((child) => {
+    if (!child.isMesh) return;
+    child.material = Array.isArray(child.material)
+      ? child.material.map((m) => roseMaterial(m.name))
+      : roseMaterial(child.material.name);
+  });
+
+  // Re-center the model so it turns around its own middle.
+  const box = new THREE.Box3().setFromObject(rose);
+  rose.position.sub(box.getCenter(new THREE.Vector3()));
+  roseNativeHeight = box.getSize(new THREE.Vector3()).y;
+  rosePivot.add(rose);
+  applyRoseRotation();
+  layoutAbout();
 });
 
-renderer.domElement.addEventListener('mouseup', function(e) {
+// Place the rose head relative to what the camera can see at the about stop:
+// to the right of the bio window on wide screens, above it on tall phones.
+function layoutAbout() {
+  const halfH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * ROSE_DISTANCE;
+  const halfW = halfH * camera.aspect;
+  const portrait = camera.aspect < 1;
+  roseBase.set(
+    portrait ? 0 : halfW * 0.5,
+    portrait ? halfH * 0.5 : -halfH * 0.05,
+    ABOUT_Z - ROSE_DISTANCE
+  );
+  const targetHeight = portrait ? halfH * 0.5 : halfH * 0.65;
+  roseGroup.scale.setScalar(targetHeight / roseNativeHeight);
+}
+layoutAbout();
+
+// How the rose head follows the cursor.
+const ROSE_LOOK = {
+  turn: 0.9,      // how far it turns left/right (radians at the screen edge)
+  nod: 0.5,       // how far it tilts up/down
+  ease: 0.08,     // 0–1: lower = lazier, higher = snappier
+  autoSpin: 0,    // set to e.g. 0.35 to bring back the slow spin
+};
+
+const roseTilt = new THREE.Vector2(); // eases toward the mouse
+const roseScreen = new THREE.Vector3();
+
+function updateAbout(t) {
+  roseGroup.position.set(roseBase.x, roseBase.y + Math.sin(t * 1.4) * 0.6, roseBase.z);
+
+  // Look toward the cursor, measured from where the rose sits on screen.
+  let lookX = 0;
+  let lookY = 0;
+  if (pointer.x !== OFFSCREEN) {
+    roseScreen.copy(roseGroup.position).project(camera); // -1..1 screen coords
+    const mx = (pointer.x / window.innerWidth) * 2 - 1;
+    const my = -(pointer.y / window.innerHeight) * 2 + 1;
+    lookX = THREE.MathUtils.clamp(mx - roseScreen.x, -1, 1);
+    lookY = THREE.MathUtils.clamp(my - roseScreen.y, -1, 1);
+  }
+  roseTilt.x += (-lookY * ROSE_LOOK.nod - roseTilt.x) * ROSE_LOOK.ease;
+  roseTilt.y += (lookX * ROSE_LOOK.turn - roseTilt.y) * ROSE_LOOK.ease;
+
+  roseGroup.rotation.x = roseTilt.x;
+  roseGroup.rotation.y = roseTilt.y + t * ROSE_LOOK.autoSpin;
+
+  // Bio window flies in once the camera has (nearly) arrived.
+  if (aboutPanel) {
+    aboutPanel.classList.toggle('visible', Math.abs(camera.position.z - ABOUT_Z) < 12);
+  }
+}
+
+document.getElementById('about-close')?.addEventListener('click', () => scrollToZone('home'));
+
+// --- Drag to spin the castle -------------------------------------------------
+let isDragging = false;
+let didDrag = false; // true if the mouse actually moved while held down
+let dragStart = { x: 0, y: 0 };
+let lastPointer = { x: 0, y: 0 };
+let spinVelocity = 0;
+
+renderer.domElement.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  didDrag = false;
+  dragStart = { x: e.clientX, y: e.clientY };
+  lastPointer = { x: e.clientX, y: e.clientY };
+  spinVelocity = 0;
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (!isDragging || !castleModel) return;
+  if (Math.hypot(e.clientX - dragStart.x, e.clientY - dragStart.y) > 5) didDrag = true;
+  const deltaX = e.clientX - lastPointer.x;
+  castleModel.rotation.y += deltaX * 0.01;
+  spinVelocity = deltaX * 0.01;
+  lastPointer = { x: e.clientX, y: e.clientY };
+});
+
+window.addEventListener('mouseup', () => {
   isDragging = false;
 });
 
-//text setup
+// =============================================================================
+// HUD nav cubes — small, spinning, pinned to the screen
+// =============================================================================
+const hudScene = new THREE.Scene();
+// Orthographic camera measured in screen pixels: (0,0) is the bottom-left corner.
+const hudCamera = new THREE.OrthographicCamera(0, window.innerWidth, window.innerHeight, 0, -1000, 1000);
 
-const fontLoader = new FontLoader();
-let cubeTexts = [] // store [mesh, text] pairs
+hudScene.add(new THREE.AmbientLight(0xff9c9c, 1.5));
+const hudLight = new THREE.DirectionalLight(0xffffff, 2);
+hudLight.position.set(-1, 1, 1);
+hudScene.add(hudLight);
 
-fontLoader.load(asset('/fonts/Old London_Regular.json'), (font) => {
-  const texts = [
-    {label: "about", color: 0xff0000},
-    {label: "work", color: 0x00ff00},
-    {label: "social", color: 0x0000ff}
-  ];
-  
-  texts.forEach((obj, idx) => {
-    const textGeo = new TextGeometry(obj.label, {
-       font: font,
-    size: 6,
-    strokeColor: 0x000000,
-    strokeWeight: 0.5,
-    height: 0.5,
-    depth: 0.5,
-    curveSegments: 8,
-    bevelEnabled: false,
-    bevelThickness: 1,
-    bevelSize: 0.1,
-    bevelOffset: 0,
-    bevelSegments: 5,
-    });
-    textGeo.center();
+// Where each cube sits. pos() gets screen width, height, and cube size in px.
+// labelSide says which side of the cube its word appears on.
+const NAV_ITEMS = [
+  {
+    label: 'about',
+    color: 0xff0000,
+    labelSide: 'right',
+    pos: (w, h, s) => [s * 1.3, h - s * 1.3],          // top left
+    onClick: () => scrollToZone('about'),
+  },
+  {
+    label: 'work',
+    color: 0x00ff00,
+    labelSide: 'left',
+    pos: (w, h, s) => [w - s * 1.3, h * 0.68],          // mid-top right
+    onClick: () => scrollToZone('work'),
+  },
+  {
+    label: 'contact',
+    color: 0x0000ff,
+    labelSide: 'right',
+    pos: (w, h, s) => [s * 1.3 + w * 0.06, 70 + s * 0.8], // bottom left (nudged right), above the marquee
+    onClick: () => { window.location.href = `mailto:${CONTACT_EMAIL}`; },
+  },
+];
 
-    const textMat = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      roughness: 0,
-      metalness: 0,
-      
-    });
+const labelLayer = document.createElement('div');
+labelLayer.id = 'nav-labels';
+document.body.appendChild(labelLayer);
 
-    const mesh = new THREE.Mesh(textGeo, textMat);
-    mesh.visible = false;
-    scene.add(mesh);
-    cubeTexts[idx] = mesh;
-    });
-  });
+const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+const edgeGeometry = new THREE.EdgesGeometry(cubeGeometry);
 
-// === CUBE SETUP ===
-const cubeGeometry = new THREE.BoxGeometry( 15, 15, 15 );
-const material1 = new THREE.MeshPhongMaterial( { color: 0xFF0000, opacity: 0.6, transparent: true } );
-const material2 = new THREE.MeshPhongMaterial( { color: 0x00FF00, opacity: 0.6, transparent: true } );
-const material3 = new THREE.MeshPhongMaterial( { color: 0x0000FF, opacity: 0.6, transparent: true } );
-
-
-const cube1 = new THREE.Mesh( cubeGeometry, material1 );
-cube1.position.set(-35, 15, 100);
-cube1.userData.baseScale = 1;
-const cube2 = new THREE.Mesh( cubeGeometry, material2 );
-cube2.position.set(35, 7.5, 100);
-cube2.userData.baseScale = 1;
-const cube3 = new THREE.Mesh( cubeGeometry, material3 );
-cube3.position.set(-3, -17, 100);
-cube3.scale.set(1.2, 1.2, 1.2); // slightly larger
-cube3.userData.baseScale = 1.2;
-
-cube1.userData.targetScale = cube1.userData.baseScale;
-cube2.userData.targetScale = cube2.userData.baseScale;
-cube3.userData.targetScale = cube3.userData.baseScale;
-scene.add( cube1 );
-scene.add( cube2 );
-scene.add( cube3 );
-
-// Add black edges to the cube and store references
-function addEdgesToCube(cube) {
-  const edge = new THREE.LineSegments(
-    new THREE.EdgesGeometry(cube.geometry),
-    new THREE.LineBasicMaterial({ color: 0x000000 })
+NAV_ITEMS.forEach((item, i) => {
+  item.cube = new THREE.Mesh(
+    cubeGeometry,
+    new THREE.MeshPhongMaterial({ color: item.color, opacity: 0.6, transparent: true })
   );
-  cube.add(edge);
-  return edge;
-}
-const edge1 = addEdgesToCube(cube1);
-const edge2 = addEdgesToCube(cube2);
-const edge3 = addEdgesToCube(cube3);
+  item.edge = new THREE.LineSegments(edgeGeometry, new THREE.LineBasicMaterial({ color: 0x000000 }));
+  item.cube.add(item.edge);
+  item.cube.rotation.set(0.5 + i, 0.6 + i, 0); // start each at a different angle
+  item.cube.userData.item = item;
+  hudScene.add(item.cube);
 
-const cubes = [cube1, cube2, cube3];
-const edges = [edge1, edge2, edge3];
-
-// === HOVER ANIMATION SETUP ===
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-let hoveredCube = null;
-let hoveredEdge = null;
-
-// Track mouse position for raycasting
-renderer.domElement.addEventListener('mousemove', (event) => {
-  // Normalize mouse coordinates (-1 to +1)
-  const rect = renderer.domElement.getBoundingClientRect();
-  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  // The word next to the cube is a plain HTML element layered over the canvas.
+  // It starts as italic text, then gets swapped for Old London letter shapes.
+  item.labelEl = document.createElement('div');
+  item.labelEl.className = 'nav-label';
+  item.labelEl.innerHTML = `<span class="nav-label-float">${item.label}</span>`;
+  labelLayer.appendChild(item.labelEl);
 });
 
-// === ANIMATION LOOP ===
-camera.position.z = 50;
+// Touch screens have no hover, so show the labels all the time there.
+const alwaysShowLabels = window.matchMedia('(hover: none)').matches;
 
-function showTextForCube(idx, cube) {
-  cubeTexts.forEach((textMesh, i) => {
-    if (i === idx) {
-      // Position directly in front of the cube (offset along the Z axis)
-      textMesh.position.copy(cube.position);
-      textMesh.position.y += 0;     // A bit above the cube (optional)
-      textMesh.position.z -= 0;     // In front of the cube, toward the camera
-      textMesh.visible = true;
-      floatingTextIdx = idx;
-      textFloatTime = 0;
+let cubeSize = 50;
+
+function layoutHud() {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  cubeSize = THREE.MathUtils.clamp(Math.min(w, h) * 0.07, 36, 64);
+
+  hudCamera.right = w;
+  hudCamera.top = h;
+  hudCamera.updateProjectionMatrix();
+
+  const gap = cubeSize * 0.75 + 12; // half a grown cube + breathing room
+  NAV_ITEMS.forEach((item) => {
+    const [x, y] = item.pos(w, h, cubeSize);
+    item.x = x;
+    item.y = y;
+    item.cube.position.set(x, y, 0);
+
+    const el = item.labelEl.style;
+    el.top = `${h - y}px`;
+    el.height = `${cubeSize * 0.9}px`;
+    el.fontSize = `${cubeSize * 0.6}px`;
+    if (item.labelSide === 'right') {
+      el.left = `${x + gap}px`;
+      el.right = 'auto';
     } else {
-      textMesh.visible = false;
+      el.right = `${w - x + gap}px`;
+      el.left = 'auto';
     }
   });
 }
+
+// Turn a word into an SVG drawing using the glyph outlines in a typeface.js
+// font file (the same file the 3D title text used).
+function wordToSvg(font, text) {
+  let x = 0;
+  let d = '';
+  for (const ch of text) {
+    const glyph = font.glyphs[ch];
+    if (!glyph) continue;
+    const t = (glyph.o || '').trim().split(/\s+/);
+    let i = 0;
+    const pt = () => `${+t[i++] + x} ${-t[i++]}`; // font y points up, SVG y points down
+    while (i < t.length) {
+      const cmd = t[i++];
+      if (cmd === 'm') d += `M${pt()}`;
+      else if (cmd === 'l') d += `L${pt()}`;
+      else if (cmd === 'q') { const end = pt(); const c = pt(); d += `Q${c} ${end}`; }
+      else if (cmd === 'b') { const end = pt(); const c1 = pt(); const c2 = pt(); d += `C${c1} ${c2} ${end}`; }
+      else if (cmd === 'z') d += 'Z';
+    }
+    x += glyph.ha;
+  }
+  const { yMin, yMax } = font.boundingBox;
+  const pad = 40;
+  return `<svg viewBox="${-pad} ${-yMax - pad} ${x + pad * 2} ${yMax - yMin + pad * 2}" aria-hidden="true">` +
+    `<path d="${d}"/></svg>`;
+}
+
+fetch(asset('fonts/Old London_Regular.json'))
+  .then((res) => res.json())
+  .then((font) => {
+    NAV_ITEMS.forEach((item) => {
+      item.labelEl.firstChild.innerHTML = wordToSvg(font, item.label);
+    });
+  })
+  .catch((err) => console.warn('Old London font did not load — using plain text labels.', err));
+
+layoutHud();
+
+// --- Pointer → which nav cube is under it? ------------------------------------
+// Simple screen-space check: a generous circle around each cube, plus the
+// word and the gap next to it once the word is showing.
+const OFFSCREEN = -99999;
+const pointer = { x: OFFSCREEN, y: OFFSCREEN }; // in page pixels, (0,0) = top left
+
+function navItemAt(p) {
+  const h = window.innerHeight;
+  for (const item of NAV_ITEMS) {
+    const cx = item.x;
+    const cy = h - item.y;
+    if (Math.hypot(p.x - cx, p.y - cy) < cubeSize * 0.8) return item;
+
+    if (item.labelEl.classList.contains('visible')) {
+      const r = item.labelEl.getBoundingClientRect();
+      const minX = Math.min(cx, r.left) - 8;
+      const maxX = Math.max(cx, r.right) + 8;
+      if (p.x >= minX && p.x <= maxX && p.y >= r.top - 8 && p.y <= r.bottom + 8) return item;
+    }
+  }
+  return null;
+}
+
+window.addEventListener('pointermove', (e) => {
+  pointer.x = e.clientX;
+  pointer.y = e.clientY;
+});
+document.documentElement.addEventListener('mouseleave', () => {
+  pointer.x = OFFSCREEN;
+  pointer.y = OFFSCREEN;
+});
+
+window.addEventListener('click', (e) => {
+  // Ignore the click that ends a castle drag.
+  if (didDrag) {
+    didDrag = false;
+    return;
+  }
+  const item = navItemAt({ x: e.clientX, y: e.clientY });
+  if (item) item.onClick();
+});
+
+// --- Scroll hint -------------------------------------------------------------
+const scrollHint = document.getElementById('scroll-hint');
+
+function onScroll() {
+  updateCameraTarget();
+  updateIntroMotion();
+  if (scrollHint) scrollHint.classList.toggle('hidden', window.scrollY > 40);
+}
+window.addEventListener('scroll', onScroll, { passive: true });
+
+// --- Resize ------------------------------------------------------------------
+window.addEventListener('resize', () => {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  buildZones();
+  layoutHud();
+  layoutAbout();
+  onScroll();
+});
+
+// --- Animation loop ----------------------------------------------------------
+const growTarget = new THREE.Vector3();
+const clock = new THREE.Clock();
 
 function animate() {
+  const t = clock.getElapsedTime();
 
-  const cameraEase = 0.08;
+  // Camera eases toward its scroll target.
+  camera.position.z += (targetCameraZ - camera.position.z) * 0.08;
 
-  camera.position.z += (targetCameraZ - camera.position.z) * cameraEase;
+  if (titleMesh) titleMesh.rotation.y -= 0.001;
 
-  // Cube rotation
-  cube1.rotation.x += -0.002; cube1.rotation.y += 0.001;
-  cube2.rotation.x += 0.0025; cube2.rotation.y += -0.0012;
-  cube3.rotation.x += 0.002;  cube3.rotation.y += 0.0013;
-  //textMesh.x += 0.005;
+  updateAbout(t);
 
-  if (textMesh) {
-    textMesh.rotation.y -= 0.001;
+  // Castle keeps spinning a little after you let go.
+  if (castleModel && !isDragging) {
+    castleModel.rotation.y += spinVelocity;
+    spinVelocity *= 0.95;
+    if (Math.abs(spinVelocity) < 0.0001) spinVelocity = 0;
   }
 
-  if (floatingTextIdx !== null && cubeTexts[floatingTextIdx]) {
-  textFloatTime += 0.045; // speed of the float; tweak as you like!
-  const basePosY = cubes[floatingTextIdx].position.y; // match cube’s position
-  const amplitude = 0.8;   // how high it floats, tweak for your style
-  // Bob up and down with a sine wave
-  cubeTexts[floatingTextIdx].position.y = basePosY + Math.sin(textFloatTime) * amplitude;
-}
+  // Nav cubes: hover state, spin, grow, floating labels.
+  const hoveredItem = navItemAt(pointer);
+  renderer.domElement.style.cursor = hoveredItem ? 'pointer' : '';
 
-  // === HOVER LOGIC ===
-  raycaster.setFromCamera(mouse, camera);
-  const intersects = raycaster.intersectObjects(cubes);
+  NAV_ITEMS.forEach((item, i) => {
+    const isHovered = item === hoveredItem;
 
-  if (intersects.length > 0) {
-    const targetCube = intersects[0].object;
-    const targetEdge = targetCube.children.find(child => child.type === 'LineSegments');
-    const idx = cubes.indexOf(targetCube);
-    if (hoveredCube !== targetCube) {
-            showTextForCube(idx, targetCube);
+    item.cube.rotation.x += [-0.002, 0.0025, 0.002][i] * 2;
+    item.cube.rotation.y += [0.001, -0.0012, 0.0013][i] * 2;
 
-      // Restore previous
-      if (hoveredCube && hoveredEdge) {
-        hoveredCube.userData.targetScale = hoveredCube.userData.baseScale;
-        if (hoveredEdge) hoveredEdge.material.color.set(0x000000);
-      }
-      hoveredCube = targetCube;
-      hoveredEdge = targetEdge;
-      hoveredCube.userData.targetScale = hoveredCube.userData.baseScale * 1.2;
-      if (hoveredEdge) hoveredEdge.material.color.set(0xffffff);
-    }
-  } else if (hoveredCube && hoveredEdge) {
-    hoveredCube.userData.targetScale = hoveredCube.userData.baseScale;
-    if (hoveredEdge) hoveredEdge.material.color.set(0x000000);
-    hoveredCube = null;
-    hoveredEdge = null;
+    const size = cubeSize * (isHovered ? 1.2 : 1);
+    item.cube.scale.lerp(growTarget.set(size, size, size), 0.1);
+    item.edge.material.color.set(isHovered ? 0xffffff : 0x000000);
 
-    cubeTexts.forEach(mesh => mesh.visible = false);
-    floatingTextIdx = null; // reset floating text index
-  }
-
-  renderer.domElement.addEventListener('click', () => {
-  if (hoveredCube) {
-    const idx = cubes.indexOf(hoveredCube);
-    const sectionIds = ['about', 'media', 'social'];
-    const targetId = sectionIds[idx];
-
-    // Hide all sections
-    document.querySelectorAll('.info-section').forEach(sec => sec.classList.remove('visible'));
-
-    // Show target
-    const targetEl = document.getElementById(`section-${targetId}`);
-    if (targetEl) targetEl.classList.add('visible');
-  }
-});
-
-
-  
-
-  // Smoothly animate scale for all cubes
-  cubes.forEach(cube => {
-    if (!cube.userData.targetScale) cube.userData.targetScale = 1;
-    cube.scale.lerp(
-      new THREE.Vector3(
-        cube.userData.targetScale,
-        cube.userData.targetScale,
-        cube.userData.targetScale
-      ),
-      0.1
-    );
+    // Fade the word in/out (the float animation lives in style.css).
+    item.labelEl.classList.toggle('visible', isHovered || alwaysShowLabels);
   });
 
-  // Inertia spin for text
-  if (castleModel) {
-    if (!isDragging) {
-      castleModel.rotation.x += spinVelocity.x;
-      castleModel.rotation.y += spinVelocity.y;
-
-      // Apply friction
-      spinVelocity.x *= 0.95;
-      spinVelocity.y *= 0.95;
-
-      if (Math.abs(spinVelocity.x) < 0.0001) spinVelocity.x = 0;
-      if (Math.abs(spinVelocity.y) < 0.0001) spinVelocity.y = 0;
-    }
-  }
-
+  renderer.clear();
   renderer.render(scene, camera);
+  renderer.clearDepth(); // so the HUD always draws on top
+  renderer.render(hudScene, hudCamera);
 }
 renderer.setAnimationLoop(animate);
-
+onScroll();

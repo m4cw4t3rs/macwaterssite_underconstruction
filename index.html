@@ -4,57 +4,56 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MAC WATERS 🏰</title>
+    <meta name="description" content="mac waters is a multimedia composer/violist based in vermont." />
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="images/rose_head_favicon.png">
-    <link rel="apple-touch-icon" href="/images/rose_head_favicon.png">
-
-    <style>
-       body, html {
-  margin: 0;
-  padding: 0;
-  width: 100vw;
-  height: 100vh;
-
-}
-
-#three-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 1000vh;
-  z-index: 0;
-  pointer-events: auto; /* If you want HTML elements to be clickable above the canvas */
-}
-
-#scroll-content {
-  position: relative;
-  z-index: 1;
-  /* Your scrollable content styles here */
-}
-
-
-
-
-    </style>
-    
+    <link rel="apple-touch-icon" href="images/rose_head_favicon.png">
   </head>
   <body>
-    <div id="bio-block">
-  <p>mac waters is a multimedia composer/violist based in vermont. </p>
-  <p>my site is currently under construction. pls contact <a href="mailto:macarthur.waters@gmail.com" target="_blank" style="color: lightblue;">macarthur.waters@gmail.com</a> with any creative inquiries xoxo </p>
-  <p>🏰🎻💿</p>
-</div>
-<script type="module" src="./main.js"></script>
-    <div class ="marquee-container">
-  <span class="marquee-text"> 
-      SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; </span>
-  <span class="marquee-text"> 
-       SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp;  SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 </span>
-</div>
+    <!-- Hidden from view, but read by search engines and screen readers -->
+    <div class="sr-only">
+      <h1>mac waters</h1>
+      <p>mac waters is a multimedia composer/violist based in vermont.</p>
+      <p>contact: <a href="mailto:macarthur.waters@gmail.com">macarthur.waters@gmail.com</a></p>
+    </div>
 
-<div id="scroll-spacer" style="height: 600vh; pointer-events: none; ">/</div>"
+    <div id="scroll-hint">scroll &darr;</div>
 
+    <!-- ABOUT station: flies in when the camera reaches "about". Edit your bio here. -->
+    <section id="about-panel" class="station-panel" aria-label="about">
+      <div class="win-window about-window" data-drag>
+        <div class="win-titlebar" data-drag-handle>
+          <span>about_mac.txt</span>
+          <span class="win-buttons" aria-hidden="true">
+            <span class="win-btn">_</span><span class="win-btn">&#9633;</span>
+          </span>
+          <button id="about-close" class="win-btn" aria-label="close, back to the castle">&times;</button>
+        </div>
+        <div class="win-body">
+          <h2>mac waters</h2>
+          <p>mac waters is a multimedia composer/violist based in vermont.</p>
+          <p>[more bio coming soon]</p>
+          <p>contact: <a href="mailto:macarthur.waters@gmail.com">macarthur.waters@gmail.com</a></p>
+        </div>
+      </div>
 
+      <!-- Your photo/illustration: save it as public/images/about-me.png -->
+      <figure class="about-photo" data-drag>
+        <img src="/images/about-me.png" alt="mac waters" draggable="false" onerror="this.closest('figure').classList.add('no-photo')">
+        <figcaption>your photo here<br>(save as public/images/about-me.png)</figcaption>
+      </figure>
+    </section>
+
+    <div class="marquee-container">
+      <span class="marquee-text">
+        SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; </span>
+      <span class="marquee-text">
+        SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 </span>
+    </div>
+
+    <!-- Gives the page its scroll length; main.js sets the height -->
+    <div id="scroll-spacer"></div>
+
+    <script type="module" src="./main.js"></script>
   </body>
 </html>
