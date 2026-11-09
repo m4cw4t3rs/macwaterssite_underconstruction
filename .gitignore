@@ -2,3 +2,7 @@
 node_modules
 dist
 .DS_Store
+
+# big source files (not needed by the site)
+assets_src/castle-textures/
+assets_src/media-originals/

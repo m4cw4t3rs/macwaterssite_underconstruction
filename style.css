@@ -14,18 +14,28 @@ html, body {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 1;
+  z-index: 2;
 }
 
 #scroll-spacer {
   pointer-events: none;
 }
 
+/* Invisible markers the page snaps to — one per stop (made in main.js) */
+.snap-point {
+  position: absolute;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+  scroll-snap-align: start;
+}
+
 /* "scroll ↓" hint — fades away once you start scrolling */
 #scroll-hint {
   position: fixed;
   left: 50%;
-  bottom: 64px;
+  bottom: 52px;
   transform: translateX(-50%);
   z-index: 5000;
   pointer-events: none;
@@ -47,31 +57,146 @@ html, body {
   50%      { transform: translate(-50%, 6px); }
 }
 
-.marquee-container {
-  width: 100vw;
-  overflow: hidden;
+/* =========================================================================
+   Taskbar + start menu (taskbar.js)
+   ========================================================================= */
+#taskbar {
   position: fixed;
-  bottom: 20px;
   left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 6000;
+  height: 34px;
   display: flex;
-  z-index: 5000;
-  pointer-events: none; /* so it doesn't block clicks */
+  align-items: center;
+  gap: 4px;
+  padding: 2px 3px;
+  box-sizing: border-box;
+  background: #c0c0c0;
+  border-top: 2px solid #ffffff;
+  box-shadow: 0 -1px 0 #dfdfdf;
+  font: 12px Tahoma, "MS Sans Serif", Geneva, sans-serif;
+  color: #000000;
 }
 
-.marquee-text {
-  display: inline-block;
-  font-family: arial;
-  font-style: italic;
-  letter-spacing: 10px;
-  font-size: 1rem;
+/* Raised 90s buttons; .pressed = pushed in */
+.tb-start,
+.tb-task {
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 8px;
+  background: #c0c0c0;
+  color: #000000;
+  border: 2px solid;
+  border-color: #ffffff #404040 #404040 #ffffff;
+  box-shadow: inset -1px -1px 0 #808080;
+  font: inherit;
+  cursor: pointer;
+}
+
+.tb-start {
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.tb-start img {
+  image-rendering: pixelated;
+}
+
+.tb-start.pressed,
+.tb-task.pressed {
+  border-color: #404040 #ffffff #ffffff #404040;
+  box-shadow: inset 1px 1px 0 #808080;
+  background: #d4d0c8;
+}
+
+.tb-tasks {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 3px;
+  overflow: hidden;
+}
+
+.tb-task {
+  flex: 0 1 160px;
+  min-width: 40px;
+  justify-content: flex-start;
+  overflow: hidden;
   white-space: nowrap;
-  animation: marquee 20s linear infinite;
-  color: #ffffff;
+  text-overflow: ellipsis;
 }
 
-@keyframes marquee {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-100%); }
+.tb-tray {
+  flex-shrink: 0;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid;
+  border-color: #808080 #ffffff #ffffff #808080;
+}
+
+#start-menu {
+  position: fixed;
+  left: 2px;
+  bottom: 34px;
+  z-index: 6001;
+  display: flex;
+  min-width: 190px;
+}
+
+#start-menu[hidden] {
+  display: none;
+}
+
+/* the vertical "mac waters" stripe down the side, Windows 95 style */
+.sm-banner {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  padding: 8px 4px;
+  background: linear-gradient(0deg, #000080, #1084d0);
+  color: #ffffff;
+  font: bold 18px "Times New Roman", Times, serif;
+  font-style: italic;
+  letter-spacing: 1px;
+}
+
+#start-menu ul {
+  flex: 1;
+  list-style: none;
+  margin: 0;
+  padding: 3px 0;
+}
+
+#start-menu button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 16px 7px 10px;
+  background: none;
+  border: 0;
+  text-align: left;
+  font: 13px Tahoma, "MS Sans Serif", Geneva, sans-serif;
+  color: #000000;
+  cursor: pointer;
+}
+
+#start-menu button:hover,
+#start-menu button:focus-visible {
+  background: #000080;
+  color: #ffffff;
+  outline: none;
+}
+
+.sm-divider {
+  margin: 3px 4px;
+  border-top: 1px solid #808080;
+  border-bottom: 1px solid #ffffff;
 }
 
 /* Nav cube labels — white Old London words that fade in and gently float */
@@ -166,6 +291,26 @@ html, body {
   cursor: grabbing;
 }
 
+/* Embedded players (Vimeo, YouTube, Bandcamp...) can steal the mouse
+   mid-drag; switch them off just while dragging. */
+.dragging iframe,
+.dragging video {
+  pointer-events: none;
+}
+
+/* Media inside windows fits the window's width */
+.win-body video,
+.win-body iframe,
+.win-body img {
+  display: block;
+  width: 100%;
+  border: 0;
+}
+
+.win-body audio {
+  width: 100%;
+}
+
 /* 90s window chrome */
 .win-window {
   background: #c0c0c0;
@@ -238,6 +383,7 @@ button.win-btn:active {
 
 /* Fly-in: the window swoops in from the left... */
 .about-window {
+  z-index: 2;
   transform: translateX(-120vw) rotate(-10deg);
   transition: transform 0.7s cubic-bezier(0.2, 1.25, 0.4, 1);
 }
@@ -246,9 +392,317 @@ button.win-btn:active {
   transform: none;
 }
 
+/* The upcoming.txt window swoops in from the right, over the bio's top corner */
+.news-window[data-drag] {
+  position: absolute;
+  z-index: 1;          /* starts tucked behind the bio window */
+  top: -60px;
+  right: -250px;
+  width: 260px;
+  transform: translateX(120vw) rotate(10deg);
+  transition: transform 0.7s cubic-bezier(0.2, 1.25, 0.4, 1) 0.25s;
+}
+
+.station-panel.visible .news-window {
+  transform: none;
+}
+
+.news-window .win-body {
+  font-size: 0.95rem;
+  padding: 10px 14px;
+}
+
+.news-window ul {
+  margin: 0;
+  padding-left: 1.1em;
+}
+
+.news-window li + li {
+  margin-top: 0.4em;
+}
+
+/* Leaving a stop: everything sinks back into the dark like the castle —
+   shrinks toward the middle of the screen, blurs, dims, and fades.
+   (Scrolling back toward the castle instead, they fly back out the way they came.) */
+.station-panel.receded .win-window,
+.station-panel.receded .about-photo {
+  transform: scale(0.55);
+  filter: blur(8px) brightness(0.35);
+  opacity: 0;
+  transition:
+    transform 0.9s cubic-bezier(0.5, 0, 0.75, 0),
+    filter 0.9s ease-in,
+    opacity 0.9s ease-in;
+}
+
+.station-panel.visible .win-window,
+.station-panel.visible .about-photo {
+  filter: none;
+  opacity: 1;
+}
+
+/* =========================================================================
+   "Stage" stops (the work sections): a full-screen layer where each window
+   is placed with its own left/top/width (set right on it in index.html).
+   ========================================================================= */
+.station-panel.stage {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  transform: none;
+}
+
+/* the stage itself lets clicks through to the 3D scene; its windows don't */
+.station-panel.stage.visible {
+  pointer-events: none;
+}
+
+.stage > [data-drag] {
+  position: absolute;
+}
+
+.stage.visible > * {
+  pointer-events: auto;
+}
+
+/* where each window waits before swooping in (data-fly="...") */
+.stage [data-fly] {
+  transition: transform 0.7s cubic-bezier(0.2, 1.25, 0.4, 1) var(--delay, 0s);
+}
+.stage [data-fly="left"]  { transform: translateX(-120vw) rotate(-10deg); }
+.stage [data-fly="right"] { transform: translateX(120vw) rotate(10deg); }
+.stage [data-fly="up"]    { transform: translateY(110vh) rotate(6deg); }
+.stage [data-fly="down"]  { transform: translateY(-110vh) rotate(-6deg); }
+
+.stage.visible [data-fly] {
+  transform: none;
+}
+
+/* =========================================================================
+   Work desktop: project icons (thumbnail + label), Windows 95 style
+   ========================================================================= */
+.desktop {
+  position: absolute;
+  left: 50%;
+  top: 56%;
+  transform: translate(-50%, -50%);
+  width: min(90vw, 760px);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 28px 48px;
+}
+
+.desk-icon {
+  width: 128px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  cursor: pointer;
+  outline: none;
+}
+
+.desk-thumb {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* placeholder until the thumbnail png exists */
+.icon-ph {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #c0c0c0;
+  border: 2px solid;
+  border-color: #ffffff #404040 #404040 #ffffff;
+  box-shadow: 2px 2px 0 #000000;
+  font-size: 44px;
+}
+
+.desk-thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.desk-label {
+  max-width: 100%;
+  padding: 1px 4px;
+  color: #ffffff;
+  text-align: center;
+  font: 13px Tahoma, "MS Sans Serif", Geneva, sans-serif;
+  text-shadow: 1px 1px 0 #000000;
+  overflow-wrap: break-word;
+}
+
+/* hover / keyboard focus = "selected" (navy label, dotted outline) */
+.desk-icon:hover .desk-label,
+.desk-icon:focus-visible .desk-label {
+  background: #000080;
+  outline: 1px dotted #ffffff;
+  text-shadow: none;
+}
+
+.desk-icon:hover .desk-thumb,
+.desk-icon:focus-visible .desk-thumb {
+  filter: brightness(0.85) sepia(0.3) hue-rotate(180deg) saturate(2);
+}
+
+/* the icons also sink away when you leave the stop */
+.station-panel.receded .desk-icon {
+  transform: scale(0.55);
+  filter: blur(8px) brightness(0.35);
+  opacity: 0;
+  transition:
+    transform 0.9s cubic-bezier(0.5, 0, 0.75, 0),
+    filter 0.9s ease-in,
+    opacity 0.9s ease-in;
+}
+
+.station-panel.visible .desk-icon {
+  opacity: 1;
+}
+
+@media (max-width: 700px) {
+  .desktop {
+    position: relative;
+    left: auto;
+    top: auto;
+    transform: none;
+    gap: 20px 24px;
+  }
+
+  .desk-icon { width: 108px; }
+  .desk-thumb { width: 80px; height: 80px; }
+}
+
+/* Windows that hold video / images: no white page, just the media */
+.win-body.media {
+  padding: 0;
+  background: #000000;
+  overflow: hidden;
+}
+
+/* Videos in windows (see media.js) */
+.win-body.media {
+  position: relative;
+}
+
+.win-body.media video {
+  cursor: pointer;
+}
+
+.sound-badge {
+  margin-right: 4px;
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* little 90s tag in the corner: "click for sound" → "hover for sound" */
+.sound-hint {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  padding: 2px 6px;
+  background: #c0c0c0;
+  color: #000000;
+  border: 1px solid;
+  border-color: #ffffff #404040 #404040 #ffffff;
+  font: 11px Tahoma, "MS Sans Serif", Geneva, sans-serif;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.sound-hint .hint-hover,
+.sound-hint .hint-tap { display: none; }
+body.sound-ok .sound-hint .hint-before { display: none; }
+body.sound-ok .sound-hint .hint-hover { display: inline; }
+
+@media (hover: none) {
+  .sound-hint .hint-before { display: none; }
+  .sound-hint .hint-tap { display: inline; }
+  body.sound-ok .sound-hint .hint-hover { display: none; }
+}
+
+.win-window.sound-on .sound-hint {
+  opacity: 0;
+}
+
+/* Placeholder until the real media goes in */
+.media-ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 9;
+  padding: 12px;
+  box-sizing: border-box;
+  background: #000000;
+  color: #8a8a8a;
+  text-align: center;
+  font: italic 13px "Times New Roman", Times, serif;
+  line-height: 1.5;
+}
+.media-ph.vertical { aspect-ratio: 9 / 16; }
+.media-ph.square   { aspect-ratio: 1; }
+
+/* Start menu: the indented project links under "work" */
+#start-menu button.sm-sub {
+  padding: 4px 16px 4px 36px;
+  font-size: 12px;
+}
+
+/* Phones: stack a stop's windows in a centered column instead */
+@media (max-width: 700px) {
+  .station-panel.stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 28vh 4vw 110px;
+    box-sizing: border-box;
+  }
+
+  .stage > [data-drag] {
+    position: relative;
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    width: min(92vw, 420px) !important;
+  }
+
+  .stage .media-ph.vertical {
+    max-height: 40vh;
+    margin: 0 auto;
+  }
+}
+
+/* Used for an instant (unanimated) jump back offstage — see setPanelState() */
+.station-panel.no-anim,
+.station-panel.no-anim * {
+  transition: none !important;
+}
+
+/* Windows closed with their × button */
+.win-window.closed {
+  display: none;
+}
+
 /* ...and the photo drops in a beat later, overlapping the corner */
 .about-photo {
   position: absolute;
+  z-index: 3; /* starts in front of the windows (bio = 2, upcoming = 1) */
   top: calc(100% - 180px); /* how far it rides up over the window's bottom edge */
   left: -85px;           /* how far it hangs off the left side */
   width: 160px;
@@ -309,7 +763,14 @@ button.win-btn:active {
   .about-photo {
     width: 100px;
     top: calc(100% - 35px);
-    left: -px;
+    left: -8px;
+  }
+
+  .news-window[data-drag] {
+    top: auto;
+    bottom: calc(100% - 16px);
+    right: -4px;
+    width: 64%;
   }
 
   .about-photo.no-photo figcaption {

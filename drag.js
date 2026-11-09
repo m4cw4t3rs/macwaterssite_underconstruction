@@ -10,6 +10,11 @@
 
 let topZ = 10;
 
+// Put an element on top of the other draggable things.
+export function bringToFront(el) {
+  el.style.zIndex = ++topZ;
+}
+
 export function initDraggables(root = document) {
   root.querySelectorAll('[data-drag]').forEach(makeDraggable);
 }
@@ -30,7 +35,7 @@ function makeDraggable(el) {
     start = { x: e.clientX, y: e.clientY, ox: offset.x, oy: offset.y };
     moved = false;
     handle.setPointerCapture(e.pointerId);
-    el.style.zIndex = ++topZ;                // bring to front
+    bringToFront(el);
     el.classList.add('dragging');
   });
 

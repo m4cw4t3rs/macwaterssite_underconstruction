@@ -37,6 +37,24 @@
         </div>
       </div>
 
+      <!-- Second window: shows, releases, news. Rename the title / swap the content freely. -->
+      <div class="win-window news-window" data-drag>
+        <div class="win-titlebar" data-drag-handle>
+          <span>upcoming.txt</span>
+          <span class="win-buttons" aria-hidden="true">
+            <span class="win-btn">_</span><span class="win-btn">&#9633;</span>
+          </span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body">
+          <ul>
+            <li><b>[date]</b> — [show / release / event]</li>
+            <li><b>[date]</b> — [show / release / event]</li>
+            <li><b>[date]</b> — [show / release / event]</li>
+          </ul>
+        </div>
+      </div>
+
       <!-- Your photo/illustration: save it as public/images/about-me.png -->
       <figure class="about-photo" data-drag>
         <img src="/images/about-me.png" alt="mac waters" draggable="false" onerror="this.closest('figure').classList.add('no-photo')">
@@ -44,11 +62,190 @@
       </figure>
     </section>
 
-    <div class="marquee-container">
-      <span class="marquee-text">
-        SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; </span>
-      <span class="marquee-text">
-        SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 </span>
+    <!-- =====================================================================
+         WORK stops. Each <section id="NAME-panel"> matches a stop in main.js.
+         - position each window with style="left: …; top: …; width: …"
+         - data-fly="left | right | up | down" = which way it swoops in from
+         - --delay staggers the arrivals
+         ===================================================================== -->
+
+    <!-- WORK desktop: one icon per project. Thumbnails go in public/media/thumbs/
+         (e.g. dreamvisions.png). Until a thumbnail exists, the emoji shows instead. -->
+    <section id="work-panel" class="station-panel stage" aria-label="work">
+      <div class="desktop">
+        <div class="desk-icon" role="button" tabindex="0" data-nav="dreamvisions" data-drag data-fly="up" style="--delay: 0s;">
+          <span class="desk-thumb">
+            <span class="icon-ph" aria-hidden="true">👁️</span>
+            <img src="/media/thumbs/dreamvisions.png" alt="" draggable="false" onerror="this.remove()">
+          </span>
+          <span class="desk-label">DreamVisions+</span>
+        </div>
+        <div class="desk-icon" role="button" tabindex="0" data-nav="meditations" data-drag data-fly="up" style="--delay: 0.08s;">
+          <span class="desk-thumb">
+            <span class="icon-ph" aria-hidden="true">🧘</span>
+            <img src="/media/thumbs/meditations.png" alt="" draggable="false" onerror="this.remove()">
+          </span>
+          <span class="desk-label">GUIDED_<wbr>MEDITATIONS</span>
+        </div>
+        <div class="desk-icon" role="button" tabindex="0" data-nav="bookofhours" data-drag data-fly="up" style="--delay: 0.16s;">
+          <span class="desk-thumb">
+            <span class="icon-ph" aria-hidden="true">📖</span>
+            <img src="/media/thumbs/bookofhours.png" alt="" draggable="false" onerror="this.remove()">
+          </span>
+          <span class="desk-label">Book of Hours</span>
+        </div>
+        <div class="desk-icon" role="button" tabindex="0" data-nav="tiktokbox" data-drag data-fly="up" style="--delay: 0.24s;">
+          <span class="desk-thumb">
+            <span class="icon-ph" aria-hidden="true">📺</span>
+            <img src="/media/thumbs/tiktokbox.png" alt="" draggable="false" onerror="this.remove()">
+          </span>
+          <span class="desk-label">TikTokBox</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- DreamVisions+ -->
+    <section id="dreamvisions-panel" class="station-panel stage" aria-label="DreamVisions+">
+      <div class="win-window" data-drag data-fly="left" style="left: 10%; top: 38%; width: 420px;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>dreamvisions+.txt</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body">
+          <h2>DreamVisions+</h2>
+          <p>[ongoing media project — a few sentences about it]</p>
+          <p>[WALLED_GARDEN installation · live performance · year]</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- GUIDED_MEDITATIONS: two videos that play together -->
+    <section id="meditations-panel" class="station-panel stage" aria-label="GUIDED_MEDITATIONS">
+      <!-- (video 1 is 4:3 and video 2 is 16:9, so window 1 is 3/4 as wide — same height) -->
+      <div class="win-window" data-drag data-fly="left" style="left: 9%; top: 34%; width: min(25vw, 345px);">
+        <div class="win-titlebar" data-drag-handle>
+          <span>meditation_1.mp4</span>
+          <span class="sound-badge" aria-hidden="true">🔇</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body media">
+          <video src="/media/guided-meditations/meditation-1.mp4"
+                 poster="/media/guided-meditations/meditation-1-poster.jpg"
+                 muted loop playsinline preload="none" data-sound-group="meditations"
+                 aria-label="GUIDED_MEDITATION 1 (excerpt)"></video>
+          <div class="sound-hint" aria-hidden="true">
+            <span class="hint-before">🔈 click for sound</span>
+            <span class="hint-hover">🔈 hover for sound</span>
+            <span class="hint-tap">🔈 tap for sound</span>
+          </div>
+        </div>
+      </div>
+      <div class="win-window" data-drag data-fly="right" style="right: 7%; top: 34%; width: min(33.3vw, 460px); --delay: 0.1s;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>meditation_2.mp4</span>
+          <span class="sound-badge" aria-hidden="true">🔇</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body media">
+          <video src="/media/guided-meditations/meditation-2.mp4"
+                 poster="/media/guided-meditations/meditation-2-poster.jpg"
+                 muted loop playsinline preload="none" data-sound-group="meditations"
+                 aria-label="GUIDED_MEDITATION 2 (excerpt)"></video>
+          <div class="sound-hint" aria-hidden="true">
+            <span class="hint-before">🔈 click for sound</span>
+            <span class="hint-hover">🔈 hover for sound</span>
+            <span class="hint-tap">🔈 tap for sound</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- EDIT THE DESCRIPTION HERE -->
+      <div class="win-window" data-drag data-fly="up" style="left: calc(50% - 220px); top: 66%; width: 440px; --delay: 0.2s;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>GUIDED_MEDITATIONS.txt</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body">
+          <p>[description]</p>
+          <p>[year · credits]</p>
+          <p><a href="#">[watch the full pieces → Vimeo link]</a></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Book of Hours (album) -->
+    <section id="bookofhours-panel" class="station-panel stage" aria-label="Book of Hours">
+      <div class="win-window" data-drag data-fly="left" style="left: 10%; top: 38%; width: 400px;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>book_of_hours.txt</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body">
+          <h2>Book of Hours</h2>
+          <p>[album description]</p>
+          <p><i>coming soon</i></p>
+        </div>
+      </div>
+      <div class="win-window" data-drag data-fly="right" style="right: 12%; top: 34%; width: 300px; --delay: 0.12s;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>book_of_hours.cda</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body media">
+          <div class="media-ph square">album art<br>+ player / pre-save link</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TikTokBox -->
+    <section id="tiktokbox-panel" class="station-panel stage" aria-label="TikTokBox">
+      <div class="win-window" data-drag data-fly="left" style="left: 12%; top: 42%; width: 380px;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>tiktokbox.txt</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body">
+          <h2>TikTokBox</h2>
+          <p>[description]</p>
+        </div>
+      </div>
+      <div class="win-window" data-drag data-fly="right" style="left: 56%; top: 33%; width: 240px; --delay: 0.12s;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>tiktokbox.mp4</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body media">
+          <div class="media-ph vertical">vertical video<br>public/media/tiktokbox/</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Start menu (opens from the taskbar's start button) -->
+    <nav id="start-menu" class="win-window" aria-label="site menu" hidden>
+      <div class="sm-banner" aria-hidden="true">mac waters</div>
+      <ul>
+        <li><button data-nav="home"><span aria-hidden="true">🏰</span> castle</button></li>
+        <li><button data-nav="about"><span aria-hidden="true">🌹</span> about</button></li>
+        <li><button data-nav="work"><span aria-hidden="true">💿</span> work</button></li>
+        <li><button class="sm-sub" data-nav="dreamvisions">DreamVisions+</button></li>
+        <li><button class="sm-sub" data-nav="meditations">GUIDED_MEDITATIONS</button></li>
+        <li><button class="sm-sub" data-nav="bookofhours">Book of Hours</button></li>
+        <li><button class="sm-sub" data-nav="tiktokbox">TikTokBox</button></li>
+        <li class="sm-divider" role="separator"></li>
+        <li><button data-nav="contact"><span aria-hidden="true">✉️</span> contact</button></li>
+      </ul>
+    </nav>
+
+    <!-- Taskbar (replaces the old marquee) -->
+    <div id="taskbar">
+      <button class="tb-start" aria-haspopup="true" aria-expanded="false" aria-controls="start-menu">
+        <img src="/images/rose_head_favicon.png" alt="" width="16" height="16"> start
+      </button>
+      <div class="tb-tasks"></div>
+      <div class="tb-tray">
+        <span title="site under construction" aria-label="site under construction">🚧</span>
+        <span class="tb-clock"></span>
+      </div>
     </div>
 
     <!-- Gives the page its scroll length; main.js sets the height -->
