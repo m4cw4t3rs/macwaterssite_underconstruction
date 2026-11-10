@@ -11,6 +11,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { initDraggables } from './drag.js';
 import { initTaskbar } from './taskbar.js';
 import { initMedia } from './media.js';
+import { typeIn, cancelTypeIn } from './typewriter.js';
 
 initDraggables(); // windows + pngs marked data-drag in index.html
 initMedia();      // videos: play per stop, hover-for-sound groups
@@ -75,6 +76,9 @@ const ZONE_DEFS = [
   { name: 'meditations',   start: 4.8, hold: 0, cameraZ: 450 },
   { name: 'bookofhours',   start: 6.0, hold: 0, cameraZ: 550 },
   { name: 'tiktokbox',     start: 7.2, hold: 0, cameraZ: 650 },
+  { name: 'violarecital',  start: 8.4, hold: 0, cameraZ: 750 },
+  { name: 'shokwii',       start: 9.6, hold: 0, cameraZ: 850 },
+  { name: 'filmscoring',   start: 10.8, hold: 0, cameraZ: 950 },
 ];
 
 // Shortcut names for links (none needed right now).
@@ -131,11 +135,108 @@ function updateCameraTarget() {
   }
 }
 
+// While flying to a stop via a link (cube, icon, menu), the stops you fly
+// THROUGH stay hidden — only the destination shows itself.
+let flyingTo = null;
+let flightTimer = null;
+
 function scrollToZone(name) {
   const target = ZONE_ALIASES[name] || name;
   const z = zones.find((zone) => zone.name === target);
-  if (z) window.scrollTo({ top: z.start, behavior: 'smooth' });
+  if (!z) return;
+  flyingTo = z;
+  clearTimeout(flightTimer);
+  flightTimer = setTimeout(() => { flyingTo = null; }, 4000); // safety net
+  window.scrollTo({ top: z.start, behavior: 'smooth' });
 }
+
+// Is this stop allowed to show right now?
+function stopMayShow(name) {
+  return !flyingTo || flyingTo.name === name;
+}
+
+// The flight is over once the page AND the (slightly lagging) camera arrive...
+function checkArrival() {
+  if (!flyingTo) return;
+  const scrolled = Math.abs(window.scrollY - flyingTo.start) < 2;
+  const cameraHere = Math.abs(camera.position.z - flyingTo.cameraZ) < 1;
+  if (scrolled && cameraHere) flyingTo = null;
+}
+// ...or as soon as the visitor takes over the scrolling themselves.
+['wheel', 'touchstart', 'keydown'].forEach((type) => {
+  window.addEventListener(type, () => { flyingTo = null; }, { capture: true, passive: true });
+});
+
+// Desktop icons get scattered a little differently every time the page loads,
+// so they never sit in a perfect row. (Smaller scatter on phones.)
+const ICON_SCATTER = { x: 40, y: 40 }; // max nudge in pixels, sideways / up-down (two rows now, so keep y modest)
+function scatterIcons() {
+  const small = window.innerWidth < 700;
+  const sx = small ? ICON_SCATTER.x * 0.3 : ICON_SCATTER.x;
+  const sy = small ? ICON_SCATTER.y * 0.3 : ICON_SCATTER.y;
+  const rand = (max) => Math.round((Math.random() * 2 - 1) * max);
+  document.querySelectorAll('.desktop .desk-icon').forEach((icon) => {
+    icon.style.left = `${rand(sx)}px`;
+    icon.style.top = `${rand(sy)}px`;
+  });
+}
+scatterIcons();
+
+// --- work.txt previews ---------------------------------------------------------
+// Hovering (or tabbing to) a desktop icon swaps work.txt to that project's title
+// and types out its one-line description (data-blurb on the icon in index.html).
+// Moving off the icons brings back the default text.
+const BLURB_TYPE_SPEED = 350; // letters per second (0 = no typing effect, just show it)
+const workBlurb = document.getElementById('work-blurb');
+const blurbDefault = workBlurb ? workBlurb.innerHTML : '';
+let blurbFrame = null;
+let blurbRestore = null;
+let blurbShowing = null;
+
+function showBlurb(icon) {
+  if (!workBlurb) return;
+  cancelTypeIn(workBlurb); // if the intro is still typing itself out, stop it
+  clearTimeout(blurbRestore);
+  if (blurbShowing === icon) return;
+  blurbShowing = icon;
+  cancelAnimationFrame(blurbFrame);
+
+  const title = icon.querySelector('.desk-label')?.textContent.trim() || '';
+  const text = icon.dataset.blurb || '';
+  workBlurb.innerHTML = '<h3 class="blurb-title"></h3><p class="blurb-text"><span></span><span class="caret">▌</span></p>';
+  workBlurb.querySelector('.blurb-title').textContent = title;
+  const out = workBlurb.querySelector('.blurb-text span');
+
+  if (!BLURB_TYPE_SPEED) {
+    out.textContent = text;
+    return;
+  }
+  const start = performance.now();
+  const step = (now) => {
+    const n = Math.min(text.length, Math.floor(((now - start) / 1000) * BLURB_TYPE_SPEED));
+    out.textContent = text.slice(0, n);
+    if (n < text.length) blurbFrame = requestAnimationFrame(step);
+  };
+  blurbFrame = requestAnimationFrame(step);
+}
+
+function restoreBlurb() {
+  if (!workBlurb) return;
+  // a short pause, so gliding from one icon to the next doesn't flicker
+  clearTimeout(blurbRestore);
+  blurbRestore = setTimeout(() => {
+    cancelAnimationFrame(blurbFrame);
+    blurbShowing = null;
+    workBlurb.innerHTML = blurbDefault;
+  }, 250);
+}
+
+document.querySelectorAll('.desk-icon').forEach((icon) => {
+  icon.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') showBlurb(icon); });
+  icon.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') restoreBlurb(); });
+  icon.addEventListener('focus', () => showBlurb(icon));
+  icon.addEventListener('blur', restoreBlurb);
+});
 
 // Desktop icons on the work stop: click (or Enter) flies to that project.
 document.querySelectorAll('.desk-icon[data-nav]').forEach((icon) => {
@@ -448,13 +549,18 @@ new OBJLoader().load(asset('models/rose_head_2.obj'), (rose) => {
 
 // Place the rose head relative to what the camera can see at the about stop:
 // to the right of the bio window on wide screens, above it on tall phones.
+// Where the rose head sits on a laptop/desktop screen.
+//   x: 0 = center, 1 = right edge   (-1 = left edge)
+//   y: 0 = middle, 1 = top edge     (-1 = bottom edge)
+const ROSE_SPOT = { x: 0.36, y: -0.22 };
+
 function layoutAbout() {
   const halfH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * ROSE_DISTANCE;
   const halfW = halfH * camera.aspect;
   const portrait = camera.aspect < 1;
   roseBase.set(
-    portrait ? 0 : halfW * 0.5,
-    portrait ? halfH * 0.5 : -halfH * 0.05,
+    portrait ? 0 : halfW * ROSE_SPOT.x,
+    portrait ? halfH * 0.5 : halfH * ROSE_SPOT.y,
     ABOUT_Z - ROSE_DISTANCE
   );
   const targetHeight = portrait ? halfH * 0.5 : halfH * 0.65;
@@ -497,13 +603,28 @@ function setPanelState(panel, state) {
   panel.classList.toggle('visible', state === 'visible');
   panel.classList.toggle('receded', state === 'receded');
   panel.dataset.state = state;
+
+  // Text windows type themselves out as they arrive (see typewriter.js),
+  // starting just after each window's own fly-in delay.
+  const textBodies = panel.querySelectorAll('.win-window .win-body:not(.media)');
+  textBodies.forEach((body) => {
+    if (state === 'visible') {
+      const win = body.closest('.win-window');
+      const delay = parseFloat(getComputedStyle(win).getPropertyValue('--delay')) || 0;
+      typeIn(body, 0.25 + delay);
+    } else {
+      cancelTypeIn(body);
+    }
+  });
 }
 
 function updateAbout(t) {
   // The rose rides just in front of the camera: it grows in as you arrive at
   // the about stop and shrinks away as you leave (in either direction).
   const fromStop = Math.abs(camera.position.z - ABOUT_Z);
-  const arrive = THREE.MathUtils.smoothstep(1 - fromStop / ROSE_GROW_RANGE, 0, 1);
+  const arrive = stopMayShow('about')
+    ? THREE.MathUtils.smoothstep(1 - fromStop / ROSE_GROW_RANGE, 0, 1)
+    : 0;
   roseGroup.visible = arrive > 0.001;
   roseGroup.scale.setScalar(roseScale * arrive);
   roseGroup.position.set(
@@ -515,10 +636,10 @@ function updateAbout(t) {
   // Look toward the cursor, measured from where the rose sits on screen.
   let lookX = 0;
   let lookY = 0;
-  if (pointer.x !== OFFSCREEN) {
+  if (cursor.x !== OFFSCREEN) {
     roseScreen.copy(roseGroup.position).project(camera); // -1..1 screen coords
-    const mx = (pointer.x / window.innerWidth) * 2 - 1;
-    const my = -(pointer.y / window.innerHeight) * 2 + 1;
+    const mx = (cursor.x / window.innerWidth) * 2 - 1;
+    const my = -(cursor.y / window.innerHeight) * 2 + 1;
     lookX = THREE.MathUtils.clamp(mx - roseScreen.x, -1, 1);
     lookY = THREE.MathUtils.clamp(my - roseScreen.y, -1, 1);
   }
@@ -533,14 +654,17 @@ function updateAbout(t) {
 // same behavior: windows fly in on arrival, sink away (shrink, blur, fade)
 // when you move on, and anything you closed reopens when you come back.
 const stationPanels = ZONE_DEFS
-  .map((z) => ({ cameraZ: z.cameraZ, el: document.getElementById(`${z.name}-panel`) }))
+  .map((z) => ({ name: z.name, cameraZ: z.cameraZ, el: document.getElementById(`${z.name}-panel`) }))
   .filter((s) => s.el);
 
 function updateStations() {
   const camZ = camera.position.z;
-  for (const { cameraZ, el } of stationPanels) {
-    const arrived = Math.abs(camZ - cameraZ) < LEAVE_DISTANCE;
-    const leaving = camZ > cameraZ + LEAVE_DISTANCE;
+  for (const { name, cameraZ, el } of stationPanels) {
+    const arrived = Math.abs(camZ - cameraZ) < LEAVE_DISTANCE && stopMayShow(name);
+    // Leaving = camera moved on past it, OR you clicked away to another stop
+    // while it was showing. Either way it fades and sinks (never flies off).
+    const clickedAway = !stopMayShow(name) && el.dataset.state === 'visible';
+    const leaving = camZ > cameraZ + LEAVE_DISTANCE || clickedAway || (el.dataset.state === 'receded' && !arrived);
     if (arrived && el.dataset.state !== 'visible') {
       el.querySelectorAll('.win-window.closed').forEach((w) => w.classList.remove('closed'));
     }
@@ -715,6 +839,24 @@ fetch(asset('fonts/Old London_Regular.json'))
     NAV_ITEMS.forEach((item) => {
       item.labelEl.firstChild.innerHTML = wordToSvg(font, item.label);
     });
+    // Any element marked data-oldlondon in index.html (e.g. your name) gets drawn
+    // in Old London too. The real text stays underneath for search engines.
+    // Characters the font doesn't have (like emoji) are left as normal text.
+    document.querySelectorAll('[data-oldlondon]').forEach((el) => {
+      const text = el.textContent.trim();
+      const runs = []; // [{ inFont: true/false, text }]
+      for (const ch of text) {
+        const inFont = Boolean(font.glyphs[ch]);
+        const last = runs[runs.length - 1];
+        if (last && last.inFont === inFont) last.text += ch;
+        else runs.push({ inFont, text: ch });
+      }
+      const drawn = runs
+        .map((r) => (r.inFont ? wordToSvg(font, r.text) : `<span class="ol-plain" aria-hidden="true">${r.text}</span>`))
+        .join('');
+      el.innerHTML = `<span class="sr-only">${text}</span>${drawn}`;
+      el.classList.add('ol-drawn');
+    });
   })
   .catch((err) => console.warn('Old London font did not load — using plain text labels.', err));
 
@@ -743,7 +885,13 @@ function navItemAt(p) {
   return null;
 }
 
+// Where the mouse is anywhere on the page (the rose head watches this one,
+// even when you're over a window or the taskbar).
+const cursor = { x: OFFSCREEN, y: OFFSCREEN };
+
 window.addEventListener('pointermove', (e) => {
+  cursor.x = e.clientX;
+  cursor.y = e.clientY;
   // Only count the mouse as "over the scene" when it isn't on a window, menu, etc.
   if (e.target !== renderer.domElement) {
     pointer.x = OFFSCREEN;
@@ -756,6 +904,8 @@ window.addEventListener('pointermove', (e) => {
 document.documentElement.addEventListener('mouseleave', () => {
   pointer.x = OFFSCREEN;
   pointer.y = OFFSCREEN;
+  cursor.x = OFFSCREEN;
+  cursor.y = OFFSCREEN;
 });
 
 window.addEventListener('click', (e) => {
@@ -805,6 +955,7 @@ function animate() {
   if (titleMesh) titleMesh.rotation.y -= 0.001;
 
   updateCastle();
+  checkArrival();
   updateAbout(t);
   updateStations();
 

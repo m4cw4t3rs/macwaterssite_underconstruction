@@ -17,6 +17,59 @@ export function bringToFront(el) {
 
 export function initDraggables(root = document) {
   root.querySelectorAll('[data-drag]').forEach(makeDraggable);
+  root.querySelectorAll('[data-resize]').forEach(makeResizable);
+}
+
+// data-resize → adds a size grip (◢) in the bottom-right corner. Dragging it
+// changes the window's width; video/images inside keep their own shape, so the
+// height follows along and the aspect ratio never changes.
+function makeResizable(el) {
+  const grip = document.createElement('div');
+  grip.className = 'size-grip';
+  grip.setAttribute('aria-hidden', 'true');
+  el.appendChild(grip);
+
+  const MIN_WIDTH = 160;
+  let start = null;
+
+  grip.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    // If the window is pinned by its right edge, re-pin it by its left edge
+    // so it grows toward the grip instead of away from it.
+    const rect = el.getBoundingClientRect();
+    const parentRect = el.offsetParent ? el.offsetParent.getBoundingClientRect() : { left: 0 };
+    const t = (getComputedStyle(el).translate || 'none').split(' ');
+    const tx = t[0] === 'none' ? 0 : parseFloat(t[0]) || 0;
+    el.style.left = `${rect.left - parentRect.left - tx}px`;
+    el.style.right = 'auto';
+
+    start = { x: e.clientX, y: e.clientY, width: rect.width, aspect: rect.width / rect.height };
+    grip.setPointerCapture(e.pointerId);
+    bringToFront(el);
+    el.classList.add('dragging'); // keeps embedded players from grabbing the mouse
+  });
+
+  grip.addEventListener('pointermove', (e) => {
+    if (!start) return;
+    // Use whichever direction you pulled further (sideways or down).
+    const byX = e.clientX - start.x;
+    const byY = (e.clientY - start.y) * start.aspect;
+    const grow = Math.abs(byX) > Math.abs(byY) ? byX : byY;
+    const max = window.innerWidth * 0.9;
+    el.style.width = `${Math.min(max, Math.max(MIN_WIDTH, start.width + grow))}px`;
+  });
+
+  const end = (e) => {
+    if (!start) return;
+    start = null;
+    el.classList.remove('dragging');
+    if (grip.hasPointerCapture(e.pointerId)) grip.releasePointerCapture(e.pointerId);
+  };
+  grip.addEventListener('pointerup', end);
+  grip.addEventListener('pointercancel', end);
 }
 
 function makeDraggable(el) {

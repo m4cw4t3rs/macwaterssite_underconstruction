@@ -28,7 +28,17 @@ export function initTaskbar({ onNavigate }) {
     menu.hidden = !open;
     startBtn.classList.toggle('pressed', open);
     startBtn.setAttribute('aria-expanded', String(open));
+    if (!open) menu.querySelectorAll('.sm-has-sub.open').forEach((li) => setSub(li, false));
   };
+
+  // Cascading sub-menus: open on hover (desktop) or by tapping the ▸ arrow.
+  const setSub = (li, open) => {
+    li.classList.toggle('open', open);
+    li.querySelector('.sm-arrow')?.setAttribute('aria-expanded', String(open));
+  };
+  menu.querySelectorAll('.sm-has-sub').forEach((li) => {
+    li.querySelector('.sm-arrow')?.addEventListener('click', () => setSub(li, !li.classList.contains('open')));
+  });
   startBtn.addEventListener('click', () => setMenu(menu.hidden));
   window.addEventListener('click', () => setMenu(false)); // click anywhere else closes it
   window.addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });

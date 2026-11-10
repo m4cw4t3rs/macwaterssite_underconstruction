@@ -1,0 +1,307 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+#gradient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+#three-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+#scroll-spacer {
+  pointer-events: none;
+}
+
+/* "scroll ↓" hint — fades away once you start scrolling */
+#scroll-hint {
+  position: fixed;
+  left: 50%;
+  bottom: 64px;
+  transform: translateX(-50%);
+  z-index: 5000;
+  pointer-events: none;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 1.1rem;
+  letter-spacing: 4px;
+  color: #ffffff;
+  transition: opacity 0.6s;
+  animation: hint-bob 1.6s ease-in-out infinite;
+}
+
+#scroll-hint.hidden {
+  opacity: 0;
+}
+
+@keyframes hint-bob {
+  0%, 100% { transform: translate(-50%, 0); }
+  50%      { transform: translate(-50%, 6px); }
+}
+
+.marquee-container {
+  width: 100vw;
+  overflow: hidden;
+  position: fixed;
+  bottom: 20px;
+  left: 0;
+  display: flex;
+  z-index: 5000;
+  pointer-events: none; /* so it doesn't block clicks */
+}
+
+.marquee-text {
+  display: inline-block;
+  font-family: arial;
+  font-style: italic;
+  letter-spacing: 10px;
+  font-size: 1rem;
+  white-space: nowrap;
+  animation: marquee 20s linear infinite;
+  color: #ffffff;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-100%); }
+}
+
+/* Nav cube labels — white Old London words that fade in and gently float */
+#nav-labels {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  pointer-events: none;
+}
+
+.nav-label {
+  position: absolute;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.25s;
+  color: #ffffff;
+  font-family: "Times New Roman", Times, serif; /* fallback before the font loads */
+  font-style: italic;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.nav-label.visible {
+  opacity: 1;
+}
+
+.nav-label-float {
+  display: block;
+  height: 100%;
+  animation: label-float 2.4s ease-in-out infinite;
+}
+
+.nav-label svg {
+  display: block;
+  height: 100%;
+  width: auto;
+  overflow: visible;
+}
+
+.nav-label path {
+  fill: #ffffff;
+  stroke: #000000;       /* thin outline so white text reads on the white sky too */
+  stroke-width: 28;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+
+@keyframes label-float {
+  0%, 100% { transform: translateY(-3px); }
+  50%      { transform: translateY(3px); }
+}
+
+/* =========================================================================
+   Station panels (2D overlays that fly in at a scroll stop)
+   ========================================================================= */
+.station-panel {
+  position: fixed;
+  z-index: 3000;
+  left: 46%; /* a touch left of center, leaving room for the rose head */
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(420px, 86vw);
+  pointer-events: none;
+  visibility: hidden;
+  transition: visibility 0s linear 0.8s; /* stay visible while flying out */
+}
+
+.station-panel.visible {
+  pointer-events: auto;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+/* 90s window chrome */
+.win-window {
+  background: #c0c0c0;
+  border: 2px solid;
+  border-color: #ffffff #404040 #404040 #ffffff;
+  box-shadow: 2px 2px 0 #000000;
+}
+
+.win-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 3px 3px 6px;
+  background: linear-gradient(90deg, #000080, #1084d0);
+  color: #ffffff;
+  font: bold 13px Tahoma, "MS Sans Serif", Geneva, sans-serif;
+}
+
+.win-titlebar > span:first-child {
+  flex: 1;
+}
+
+.win-buttons {
+  display: flex;
+  gap: 2px;
+}
+
+.win-btn {
+  width: 18px;
+  height: 16px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #c0c0c0;
+  color: #000000;
+  border: 2px solid;
+  border-color: #ffffff #404040 #404040 #ffffff;
+  font: bold 11px Tahoma, sans-serif;
+  line-height: 1;
+}
+
+button.win-btn {
+  cursor: pointer;
+}
+
+button.win-btn:active {
+  border-color: #404040 #ffffff #ffffff #404040;
+}
+
+.win-body {
+  margin: 4px;
+  padding: 16px 18px;
+  background: #ffffff;
+  border: 2px solid;
+  border-color: #404040 #ffffff #ffffff #404040;
+  color: #000000;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+
+.win-body h2 {
+  margin: 0 0 0.5em;
+  font-style: italic;
+}
+
+.win-body a { color: #0000ee; }
+.win-body a:visited { color: #551a8b; }
+
+/* Fly-in: the window swoops in from the left... */
+.about-window {
+  transform: translateX(-120vw) rotate(-10deg);
+  transition: transform 0.7s cubic-bezier(0.2, 1.25, 0.4, 1);
+}
+
+.station-panel.visible .about-window {
+  transform: none;
+}
+
+/* ...and the photo drops in a beat later, overlapping the corner */
+.about-photo {
+  position: absolute;
+  top: calc(100% - 180px); /* how far it rides up over the window's bottom edge */
+  left: -85px;           /* how far it hangs off the left side */
+  width: 160px;
+  rotate: -5deg;
+  margin: 0;
+  transform: translateY(80vh) rotate(-14deg);
+  transition: transform 0.8s cubic-bezier(0.2, 1.3, 0.4, 1) 0.15s;
+}
+
+.station-panel.visible .about-photo {
+  transform: rotate(-6deg);
+}
+
+/* extra room at the bottom so the photo's corner doesn't cover the text */
+.about-window .win-body {
+  padding-bottom: 44px;
+}
+
+.about-photo img {
+  display: block;
+  width: 100%;
+}
+
+.about-photo figcaption {
+  display: none;
+}
+
+/* Placeholder until public/images/about-me.png exists */
+.about-photo.no-photo img {
+  display: none;
+}
+
+.about-photo.no-photo figcaption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  padding: 12px;
+  border: 3px dashed #ffffff;
+  background: rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+  text-align: center;
+  font: italic 14px "Times New Roman", Times, serif;
+}
+
+/* Phones: window sits near the bottom, centered */
+@media (max-width: 700px) {
+  .station-panel {
+    left: 50%;
+    top: auto;
+    bottom: 130px;
+    transform: translateX(-50%);
+  }
+
+  .about-photo {
+    width: 100px;
+    top: calc(100% - 35px);
+    left: -px;
+  }
+
+  .about-photo.no-photo figcaption {
+    height: 130px;
+    font-size: 12px;
+  }
+}
+
+/* Visually hidden, but still readable by search engines and screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

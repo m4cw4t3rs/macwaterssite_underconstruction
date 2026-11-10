@@ -255,10 +255,10 @@ html, body {
 .station-panel {
   position: fixed;
   z-index: 3000;
-  left: max(8vw, 150px); /* left side, clear of the nav cubes */
+  left: max(20vw, 150px); /* ABOUT CLUSTER position: bigger % = further right (bio, photo + upcoming.txt all move together) */
   top: 50%;
   transform: translateY(-50%);
-  width: min(460px, 86vw);
+  width: min(540px, 86vw); /* bio window width */
   pointer-events: none;
   visibility: hidden;
   transition: visibility 0s linear 0.8s; /* stay visible while flying out */
@@ -289,6 +289,28 @@ html, body {
 .dragging,
 .dragging .drag-handle {
   cursor: grabbing;
+}
+
+/* Size grip for data-resize windows (bottom-right corner, Windows 95 style) */
+.size-grip {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  z-index: 2;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
+  touch-action: none;
+  background:
+    linear-gradient(135deg,
+      transparent 0 45%, #ffffff 45% 52%, #808080 52% 59%,
+      transparent 59% 66%, #ffffff 66% 73%, #808080 73% 80%,
+      transparent 80% 87%, #ffffff 87% 94%, #808080 94%);
+  background-color: #c0c0c0;
+}
+
+@media (max-width: 700px) {
+  .size-grip { display: none; } /* on phones the windows are full width anyway */
 }
 
 /* Embedded players (Vimeo, YouTube, Bandcamp...) can steal the mouse
@@ -368,14 +390,45 @@ button.win-btn:active {
   border: 2px solid;
   border-color: #404040 #ffffff #ffffff #404040;
   color: #000000;
-  font-family: "Times New Roman", Times, serif;
-  font-size: 1.05rem;
-  line-height: 1.5;
+  /* BODY FONT for all windows: Space Mono (loaded from Google Fonts in index.html).
+     The rest are backups in case it can't load. To go back to Andale Mono, move
+     "Andale Mono" to the front of this list. */
+  font-family: "Space Mono", "Andale Mono", AndaleMono, "Lucida Console", Monaco, "Courier New", monospace;
+  font-size: 0.85rem;  /* Space Mono runs wide, so a touch smaller */
+  line-height: 1.6;
 }
 
+/* Window headings stay in the italic serif, for contrast with the mono body */
 .win-body h2 {
   margin: 0 0 0.5em;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 1.5rem;
   font-style: italic;
+}
+
+/* Headings drawn in Old London (data-oldlondon) — e.g. your name */
+.ol-drawn {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ol-drawn svg {
+  display: block;
+  height: 1.8em;   /* letter height — bigger number = bigger heading */
+  width: auto;
+  overflow: visible;
+}
+
+/* emoji (or anything else Old London doesn't have) sitting next to the letters */
+.ol-plain {
+  font-style: normal;
+  font-size: 1.4em;
+  line-height: 1;
+}
+
+.ol-drawn path {
+  fill: currentColor;
 }
 
 .win-body a { color: #0000ee; }
@@ -397,8 +450,9 @@ button.win-btn:active {
   position: absolute;
   z-index: 1;          /* starts tucked behind the bio window */
   top: -60px;
-  right: -250px;
-  width: 260px;
+  left: calc(100% - 10px);   /* tucks 10px behind the bio window's right edge, grows to the right */
+  width: max-content;        /* as wide as its longest line... */
+  max-width: min(440px, 42vw); /* ...up to this; longer lines wrap */
   transform: translateX(120vw) rotate(10deg);
   transition: transform 0.7s cubic-bezier(0.2, 1.25, 0.4, 1) 0.25s;
 }
@@ -408,7 +462,7 @@ button.win-btn:active {
 }
 
 .news-window .win-body {
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   padding: 10px 14px;
 }
 
@@ -420,7 +474,6 @@ button.win-btn:active {
 .news-window li + li {
   margin-top: 0.4em;
 }
-
 /* Leaving a stop: everything sinks back into the dark like the castle —
    shrinks toward the middle of the screen, blurs, dims, and fades.
    (Scrolling back toward the castle instead, they fly back out the way they came.) */
@@ -485,7 +538,7 @@ button.win-btn:active {
 .desktop {
   position: absolute;
   left: 50%;
-  top: 56%;
+  top: 66%;
   transform: translate(-50%, -50%);
   width: min(90vw, 760px);
   display: flex;
@@ -507,8 +560,8 @@ button.win-btn:active {
 
 .desk-thumb {
   position: relative;
-  width: 96px;
-  height: 96px;
+  width: 94px;   /* icon size: keep it a whole multiple of your art (47px art × 2 = 94) */
+  height: 94px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -521,11 +574,13 @@ button.win-btn:active {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #c0c0c0;
-  border: 2px solid;
-  border-color: #ffffff #404040 #404040 #ffffff;
-  box-shadow: 2px 2px 0 #000000;
-  font-size: 44px;
+  font-size: 64px;
+  filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.5));
+}
+
+/* once your thumbnail png has loaded, hide the emoji placeholder behind it */
+.desk-thumb.has-img .icon-ph {
+  display: none;
 }
 
 .desk-thumb img {
@@ -534,6 +589,7 @@ button.win-btn:active {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  image-rendering: pixelated; /* pixel-art icons scale up with crisp, hard edges */
 }
 
 .desk-label {
@@ -557,6 +613,41 @@ button.win-btn:active {
 .desk-icon:hover .desk-thumb,
 .desk-icon:focus-visible .desk-thumb {
   filter: brightness(0.85) sepia(0.3) hue-rotate(180deg) saturate(2);
+}
+
+/* work.txt preview text (main.js swaps this in when you hover an icon) */
+#work-blurb {
+  min-height: 4.8em; /* room for a title + 2 lines, so the window doesn't jump around */
+}
+
+#work-blurb p {
+  margin: 0;
+}
+
+.blurb-title {
+  margin: 0 0 0.3em;
+  font: italic bold 1.15rem "Times New Roman", Times, serif;
+}
+
+/* typewriter.js: letters not typed yet are invisible but still take up space,
+   so windows are full size from the start */
+.tw-rest {
+  visibility: hidden;
+}
+
+/* the moving cursor while typing takes up no space, so lines don't shift */
+.tw-caret {
+  display: inline-block;
+  width: 0;
+}
+
+/* blinking text cursor at the end of the typed line */
+.caret {
+  animation: caret-blink 1s steps(1) infinite;
+}
+
+@keyframes caret-blink {
+  50% { opacity: 0; }
 }
 
 /* the icons also sink away when you leave the stop */
@@ -584,7 +675,29 @@ button.win-btn:active {
   }
 
   .desk-icon { width: 108px; }
-  .desk-thumb { width: 80px; height: 80px; }
+  .desk-thumb { width: 94px; height: 94px; }
+}
+
+/* Loose images floating on a stop (like the about photo): <img class="float-img" data-drag ...> */
+.float-img {
+  display: block;
+  height: auto;
+}
+
+/* Anything that flew in also sinks away when you leave the stop */
+.station-panel.receded [data-fly] {
+  transform: scale(0.55);
+  filter: blur(8px) brightness(0.35);
+  opacity: 0;
+  transition:
+    transform 0.9s cubic-bezier(0.5, 0, 0.75, 0),
+    filter 0.9s ease-in,
+    opacity 0.9s ease-in;
+}
+
+.station-panel.visible [data-fly] {
+  filter: none;
+  opacity: 1;
 }
 
 /* Windows that hold video / images: no white page, just the media */
@@ -656,10 +769,49 @@ body.sound-ok .sound-hint .hint-hover { display: inline; }
 .media-ph.vertical { aspect-ratio: 9 / 16; }
 .media-ph.square   { aspect-ratio: 1; }
 
-/* Start menu: the indented project links under "work" */
-#start-menu button.sm-sub {
-  padding: 4px 16px 4px 36px;
-  font-size: 12px;
+/* Start menu: "work ▸" with a cascading project list */
+.sm-has-sub {
+  position: relative;
+  display: flex;
+}
+
+#start-menu .sm-has-sub > button[data-nav] {
+  flex: 1;
+}
+
+#start-menu button.sm-arrow {
+  width: auto;
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  font-size: 11px;
+}
+
+.sm-submenu {
+  display: none;
+  position: absolute;
+  left: 100%;
+  bottom: -3px;           /* grows upward, so it never runs off the bottom */
+  min-width: 190px;
+  margin: 0;
+  padding: 3px 0;
+  list-style: none;
+}
+
+.sm-has-sub:hover > .sm-submenu,
+.sm-has-sub:focus-within > .sm-submenu,
+.sm-has-sub.open > .sm-submenu {
+  display: block;
+}
+
+/* keep the "work" row highlighted while its sub-menu is open */
+#start-menu .sm-has-sub:hover > button,
+#start-menu .sm-has-sub.open > button {
+  background: #000080;
+  color: #ffffff;
+}
+
+#start-menu .sm-submenu button {
+  padding: 6px 16px 6px 14px;
 }
 
 /* Phones: stack a stop's windows in a centered column instead */
@@ -724,6 +876,18 @@ body.sound-ok .sound-hint .hint-hover { display: inline; }
   padding-bottom: 44px;
 }
 
+/* Bio paragraphs: fully justified, with hyphenation so the spacing stays even */
+.about-window .win-body p {
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+
+/* ...except the short contact line, which looks odd stretched out */
+.about-window .win-body p:last-child {
+  text-align: left;
+}
+
 .about-photo img {
   display: block;
   width: 100%;
@@ -769,8 +933,10 @@ body.sound-ok .sound-hint .hint-hover { display: inline; }
   .news-window[data-drag] {
     top: auto;
     bottom: calc(100% - 16px);
+    left: auto;
     right: -4px;
-    width: 64%;
+    width: auto;
+    max-width: 80%;
   }
 
   .about-photo.no-photo figcaption {
