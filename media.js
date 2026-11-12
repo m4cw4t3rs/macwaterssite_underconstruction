@@ -38,6 +38,12 @@ export function initMedia() {
     sync();
   });
 
+  // --- If the music player starts, mute any video that has its sound on ---
+  document.addEventListener('site-sound', (e) => {
+    if (e.detail?.source instanceof HTMLVideoElement) return;
+    document.querySelectorAll('video').forEach((v) => { if (!v.muted) setMuted(v, true); });
+  });
+
   // --- Sound groups ---
   const groups = {};
   document.querySelectorAll('video[data-sound-group]').forEach((v) => {
@@ -71,6 +77,10 @@ export function initMedia() {
 }
 
 function setMuted(video, muted) {
+  if (!muted && video.muted) {
+    // tell the music player (and anything else) that a video's sound just started
+    document.dispatchEvent(new CustomEvent('site-sound', { detail: { source: video } }));
+  }
   video.muted = muted;
   const win = video.closest('.win-window');
   if (!win) return;

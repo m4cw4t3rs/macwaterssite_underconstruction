@@ -23,6 +23,9 @@
 
     <div id="scroll-hint">scroll &darr;</div>
 
+    <!-- Shows on every project stop; takes you back to the work desktop -->
+    <button id="back-to-desktop" class="back-btn" tabindex="-1">&#9664; back to desktop</button>
+
     <!-- ABOUT station: flies in when the camera reaches "about". Edit your bio here. -->
     <section id="about-panel" class="station-panel" aria-label="about">
       <div class="win-window about-window" data-drag>
@@ -79,14 +82,16 @@
          (e.g. dreamvisions.png). Until a thumbnail exists, the emoji shows instead. -->
     <section id="work-panel" class="station-panel stage" aria-label="work">
       <!-- Intro window for the work desktop. Edit the text here. -->
-      <div class="win-window" data-drag data-fly="down" style="left: calc(50% - 220px); top: 33%; width: 440px;">
+      <div class="win-window" data-drag data-fly="down" style="left: calc(50% - 220px); top: 31%; width: 440px;">
         <div class="win-titlebar" data-drag-handle>
           <span>work.txt</span>
           <button class="win-btn" data-close aria-label="close this window">&times;</button>
         </div>
         <!-- DEFAULT TEXT (shown on load and whenever you're not hovering an icon) -->
         <div class="win-body" id="work-blurb">
-          <p>[a general intro to the work] — hover an icon for a preview, click to open.</p>
+          <p>mac’s work moves between fixed media and video art, interactive media, recorded music, and live performance.</p>
+          <br>
+          <p>hover an icon for a preview; click (or tap) to open.</p>
         </div>
       </div>
 
@@ -139,6 +144,13 @@
             <img src="/media/thumbs/filmscoring.png" alt="" draggable="false" onload="this.parentElement.classList.add('has-img')" onerror="this.remove()">
           </span>
           <span class="desk-label">Film Scoring</span>
+        </div>
+        <div class="desk-icon" role="button" tabindex="0" data-nav="composition" data-blurb="[one sentence about your concert / chamber works]" data-drag data-fly="up" style="--delay: 0.56s;">
+          <span class="desk-thumb">
+            <span class="icon-ph" aria-hidden="true">🎼</span>
+            <img src="/media/thumbs/composition.png" alt="" draggable="false" onload="this.parentElement.classList.add('has-img')" onerror="this.remove()">
+          </span>
+          <span class="desk-label">Concert Music</span>
         </div>
       </div>
     </section>
@@ -332,6 +344,87 @@
       </div>
     </section>
 
+    <!-- Concert Music: description, a playlist of recordings, the works list, and a book of scores -->
+    <section id="composition-panel" class="station-panel stage" aria-label="Concert Music">
+      <div class="win-window" data-drag data-fly="left" style="left: 4%; top: 32%; width: 340px;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>concert_music.txt</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body">
+          <h2>Concert Music</h2>
+          <p>[a few sentences about your concert / chamber music]</p>
+        </div>
+      </div>
+
+      <!-- PLAYLIST: one <li> per recording. data-src = the audio file (mp3) in public/media/composition/audio/ -->
+      <div class="win-window" data-drag data-fly="left" style="left: 4%; top: 58%; width: 340px; --delay: 0.15s;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>playlist.exe</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body media player" data-player>
+          <div class="player-display">
+            <span class="player-now">press ▶ to play</span>
+            <span class="player-time">0:00</span>
+          </div>
+          <div class="player-progress" role="slider" aria-label="seek" tabindex="0"><div class="player-bar"></div></div>
+          <div class="player-controls">
+            <button class="player-btn" data-act="prev" aria-label="previous track">⏮</button>
+            <button class="player-btn" data-act="play" aria-label="play / pause">▶</button>
+            <button class="player-btn" data-act="next" aria-label="next track">⏭</button>
+          </div>
+          <ol class="player-list">
+            <li data-src="/media/composition/audio/track-01.mp3">[title] — [performers]</li>
+            <li data-src="/media/composition/audio/track-02.mp3">[title] — [performers]</li>
+            <li data-src="/media/composition/audio/track-03.mp3">[title] — [performers]</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="win-window" data-drag data-fly="up" style="left: calc(50% - 190px); top: 33%; width: 380px; --delay: 0.1s;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>works_list.txt</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body">
+          <ul>
+            <li><b>[title]</b> ([year]) — [instrumentation] · [performed by]</li>
+            <li><b>[title]</b> ([year]) — [instrumentation] · [performed by]</li>
+            <li><b>[title]</b> ([year]) — [instrumentation] · [performed by]</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- SCORE BOOK: one <li> per piece.
+           data-folder = folder holding that piece's page images, named p01.jpg, p02.jpg, p03.jpg …
+           data-pages  = how many pages
+           data-pdf    = (optional) the full score PDF, for the "open pdf" link
+           data-ext    = (optional) png instead of jpg -->
+      <div class="win-window" data-drag data-resize data-fly="right" style="right: 3%; top: 31%; width: 460px; --delay: 0.2s;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>scores.book</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body media book" data-scorebook>
+          <div class="book-toolbar">
+            <select class="book-select" aria-label="choose a score"></select>
+            <a class="book-pdf" href="#" target="_blank" rel="noopener">open pdf ↗</a>
+          </div>
+          <div class="book-spread"></div>
+          <div class="book-nav">
+            <button class="player-btn" data-act="prev" aria-label="previous page">◀</button>
+            <span class="book-count">p. 1</span>
+            <button class="player-btn" data-act="next" aria-label="next page">▶</button>
+          </div>
+          <ul class="book-scores" hidden>
+            <li data-title="[piece title 1]" data-folder="/media/composition/scores/piece-1/" data-pages="6" data-pdf=""></li>
+            <li data-title="[piece title 2]" data-folder="/media/composition/scores/piece-2/" data-pages="4" data-pdf=""></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
     <!-- Start menu (opens from the taskbar's start button) -->
     <nav id="start-menu" class="win-window" aria-label="site menu" hidden>
       <div class="sm-banner" aria-hidden="true">mac waters</div>
@@ -350,6 +443,7 @@
             <li><button data-nav="violarecital"><span aria-hidden="true">🎻</span> soloviolarecital</button></li>
             <li><button data-nav="shokwii"><span aria-hidden="true">💾</span> SHOKWII</button></li>
             <li><button data-nav="filmscoring"><span aria-hidden="true">🎬</span> Film Scoring</button></li>
+            <li><button data-nav="composition"><span aria-hidden="true">🎼</span> Concert Music</button></li>
           </ul>
         </li>
         <li class="sm-divider" role="separator"></li>

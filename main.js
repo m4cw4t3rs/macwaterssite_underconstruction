@@ -12,9 +12,13 @@ import { initDraggables } from './drag.js';
 import { initTaskbar } from './taskbar.js';
 import { initMedia } from './media.js';
 import { typeIn, cancelTypeIn } from './typewriter.js';
+import { initPlayers } from './player.js';
+import { initScoreBooks } from './scorebook.js';
 
 initDraggables(); // windows + pngs marked data-drag in index.html
 initMedia();      // videos: play per stop, hover-for-sound groups
+initPlayers();    // playlist.exe music player(s)
+initScoreBooks(); // scores.book page-turning score viewer(s)
 
 const CONTACT_EMAIL = 'macarthur.waters@gmail.com';
 
@@ -79,6 +83,7 @@ const ZONE_DEFS = [
   { name: 'violarecital',  start: 8.4, hold: 0, cameraZ: 750 },
   { name: 'shokwii',       start: 9.6, hold: 0, cameraZ: 850 },
   { name: 'filmscoring',   start: 10.8, hold: 0, cameraZ: 950 },
+  { name: 'composition',   start: 12.0, hold: 0, cameraZ: 1050 },
 ];
 
 // Shortcut names for links (none needed right now).
@@ -167,9 +172,68 @@ function checkArrival() {
   window.addEventListener(type, () => { flyingTo = null; }, { capture: true, passive: true });
 });
 
+// --- Browser Back/Forward + shareable links ------------------------------------
+// Every stop has its own address: macwaters.studio/#about, /#work, /#meditations …
+// (the castle is the plain address). Arriving at a stop adds it to the browser
+// history, so Back/Forward fly between stops, links open straight to a project,
+// and refreshing keeps you where you were.
+const BASE_TITLE = document.title;
+let currentStop = null;  // the stop the address bar currently shows
+let fromHistory = false; // true while flying because of Back/Forward
+
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
+function stopLabel(name) {
+  const btn = document.querySelector(`#start-menu [data-nav="${name}"]`);
+  if (!btn) return name;
+  return btn.textContent.replace(/[^\p{L}\p{N}_+.\- ]/gu, '').trim(); // drop the emoji
+}
+
+function stopFromHash() {
+  const name = decodeURIComponent(location.hash.slice(1));
+  return zones.some((z) => z.name === name) ? name : 'home';
+}
+
+// Called every frame: once you've settled on a new stop, record it.
+function updateHistory() {
+  if (flyingTo) return; // wait until a flight lands
+  const here = zones.find((z) =>
+    Math.abs(window.scrollY - z.start) < 2 && Math.abs(camera.position.z - z.cameraZ) < 1);
+  if (!here || here.name === currentStop) return;
+
+  const url = here.name === 'home' ? location.pathname + location.search : `#${here.name}`;
+  if (currentStop === null || fromHistory) history.replaceState({ stop: here.name }, '', url);
+  else history.pushState({ stop: here.name }, '', url);
+  fromHistory = false;
+  currentStop = here.name;
+  document.title = here.name === 'home' ? BASE_TITLE : `${BASE_TITLE} · ${stopLabel(here.name)}`;
+}
+
+// Back / Forward (or typing an address with #something) → fly there.
+window.addEventListener('popstate', () => {
+  fromHistory = true;
+  scrollToZone(stopFromHash());
+});
+
+// Links that go nowhere yet (href="#" placeholders) shouldn't send you to the castle.
+document.addEventListener('click', (e) => {
+  if (e.target.closest('a[href="#"]')) e.preventDefault();
+});
+
+// Opening the site with an address like /#filmscoring: jump straight there
+// (no flying through every stop on the way).
+function jumpToStopFromAddress() {
+  const name = stopFromHash();
+  if (name === 'home') return;
+  const z = zones.find((zone) => zone.name === name);
+  window.scrollTo({ top: z.start, behavior: 'instant' });
+  camera.position.z = z.cameraZ;
+  targetCameraZ = z.cameraZ;
+}
+
 // Desktop icons get scattered a little differently every time the page loads,
 // so they never sit in a perfect row. (Smaller scatter on phones.)
-const ICON_SCATTER = { x: 40, y: 40 }; // max nudge in pixels, sideways / up-down (two rows now, so keep y modest)
+const ICON_SCATTER = { x: 30, y: 22 }; // max nudge in pixels, sideways / up-down (kept small so icons stay clear of work.txt)
 function scatterIcons() {
   const small = window.innerWidth < 700;
   const sx = small ? ICON_SCATTER.x * 0.3 : ICON_SCATTER.x;
@@ -491,8 +555,10 @@ let roseScale = 1;
 const ROSE_ROTATION = { x: 0, y: 180, z: 0 };
 
 const roseGroup = new THREE.Group(); // moves + follows the cursor
+const roseSpin = new THREE.Group();  // the click-to-swap spin happens here
 const rosePivot = new THREE.Group(); // holds the fixed resting rotation
-roseGroup.add(rosePivot);
+roseGroup.add(roseSpin);
+roseSpin.add(rosePivot);
 const roseBase = new THREE.Vector3();
 let roseNativeHeight = 1;
 scene.add(roseGroup);
@@ -545,7 +611,99 @@ new OBJLoader().load(asset('models/rose_head_2.obj'), (rose) => {
   rosePivot.add(rose);
   applyRoseRotation();
   layoutAbout();
+  fitHeadToRose();
 });
+
+// --- Click the rose: it whirls around and turns into my head (click again to
+// turn back). Drop the scan in public/models/ as mac_head.glb — until that file
+// exists, clicking just does the spin.
+const HEAD_FILE = 'models/mac_head.glb';
+const HEAD_ROTATION = { x: 0, y: 0, z: 0 }; // resting rotation (degrees) so the face looks forward
+const HEAD_SIZE = 1.0;                       // height relative to the rose (1 = same height)
+const SWAP_SPIN = {
+  turns: 2,        // full turns per click
+  duration: 1.1,   // seconds
+};
+
+const headPivot = new THREE.Group();
+headPivot.visible = false;
+roseSpin.add(headPivot);
+let headModel = null;
+let headNativeHeight = 1;
+let showingHead = false;
+let swapStart = -1;     // clock time the current spin began (-1 = not spinning)
+let swapDone = true;    // has this spin's model swap happened yet?
+
+function fitHeadToRose() {
+  if (!headModel) return;
+  headModel.scale.setScalar((roseNativeHeight / headNativeHeight) * HEAD_SIZE);
+}
+
+gltfLoader.load(
+  asset(HEAD_FILE),
+  (gltf) => {
+    const head = gltf.scene;
+    shrinkTextures(head);
+    const box = new THREE.Box3().setFromObject(head);
+    const center = box.getCenter(new THREE.Vector3());
+    headNativeHeight = box.getSize(new THREE.Vector3()).y || 1;
+    // Wrap so re-centering and scaling don't fight each other.
+    const inner = new THREE.Group();
+    head.position.sub(center);
+    inner.add(head);
+    headModel = inner;
+    freeGeometryCopies(head);
+    const d = THREE.MathUtils.degToRad;
+    headPivot.rotation.set(d(HEAD_ROTATION.x), d(HEAD_ROTATION.y), d(HEAD_ROTATION.z));
+    headPivot.add(headModel);
+    fitHeadToRose();
+  },
+  undefined,
+  () => console.info(`No ${HEAD_FILE} yet — the rose will spin but not swap.`)
+);
+
+function startSwapSpin(t) {
+  if (swapStart >= 0) return; // already spinning
+  swapStart = t;
+  swapDone = false;
+}
+
+// Called every frame from updateAbout.
+function updateSwapSpin(t) {
+  if (swapStart < 0) return;
+  const p = Math.min((t - swapStart) / SWAP_SPIN.duration, 1);
+  const eased = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2; // ease in-out
+  roseSpin.rotation.y = eased * Math.PI * 2 * SWAP_SPIN.turns;
+  // Pinch to nothing at the midpoint so the swap itself is hidden.
+  roseSpin.scale.setScalar(Math.max(1 - Math.pow(Math.sin(Math.PI * p), 6), 0.001));
+
+  if (!swapDone && p >= 0.5) {
+    swapDone = true;
+    if (headModel) {
+      showingHead = !showingHead;
+      rosePivot.visible = !showingHead;
+      headPivot.visible = showingHead;
+    }
+  }
+  if (p >= 1) {
+    swapStart = -1;
+    roseSpin.rotation.y = 0;
+    roseSpin.scale.setScalar(1);
+  }
+}
+
+// Is a screen point over the rose/head? (Uses a sphere around it — the exact
+// mesh shape is freed from memory after upload, see freeGeometryCopies.)
+const roseRay = new THREE.Raycaster();
+const roseNdc = new THREE.Vector2();
+const roseHitSphere = new THREE.Sphere();
+function roseAt(p) {
+  if (!roseGroup.visible || p.x === OFFSCREEN) return false;
+  roseNdc.set((p.x / window.innerWidth) * 2 - 1, -(p.y / window.innerHeight) * 2 + 1);
+  roseRay.setFromCamera(roseNdc, camera);
+  roseHitSphere.set(roseGroup.position, roseNativeHeight * roseGroup.scale.x * 0.45);
+  return roseRay.ray.intersectsSphere(roseHitSphere);
+}
 
 // Place the rose head relative to what the camera can see at the about stop:
 // to the right of the bio window on wide screens, above it on tall phones.
@@ -648,6 +806,7 @@ function updateAbout(t) {
 
   roseGroup.rotation.x = roseTilt.x;
   roseGroup.rotation.y = roseTilt.y + t * ROSE_LOOK.autoSpin;
+  updateSwapSpin(t);
 }
 
 // Every stop with a matching "<name>-panel" element in index.html gets the
@@ -657,10 +816,21 @@ const stationPanels = ZONE_DEFS
   .map((z) => ({ name: z.name, cameraZ: z.cameraZ, el: document.getElementById(`${z.name}-panel`) }))
   .filter((s) => s.el);
 
+// "◀ back to desktop" button: shows on every project stop (everything after
+// "work" in ZONE_DEFS), hidden on the castle, about, and the desktop itself.
+const PROJECT_STOPS = ZONE_DEFS.slice(ZONE_DEFS.findIndex((z) => z.name === 'work') + 1).map((z) => z.name);
+const backButton = document.getElementById('back-to-desktop');
+backButton?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  scrollToZone('work');
+});
+
 function updateStations() {
   const camZ = camera.position.z;
+  let onProject = false;
   for (const { name, cameraZ, el } of stationPanels) {
     const arrived = Math.abs(camZ - cameraZ) < LEAVE_DISTANCE && stopMayShow(name);
+    if (arrived && PROJECT_STOPS.includes(name)) onProject = true;
     // Leaving = camera moved on past it, OR you clicked away to another stop
     // while it was showing. Either way it fades and sinks (never flies off).
     const clickedAway = !stopMayShow(name) && el.dataset.state === 'visible';
@@ -669,6 +839,10 @@ function updateStations() {
       el.querySelectorAll('.win-window.closed').forEach((w) => w.classList.remove('closed'));
     }
     setPanelState(el, arrived ? 'visible' : leaving ? 'receded' : 'offstage');
+  }
+  if (backButton && backButton.classList.contains('visible') !== onProject) {
+    backButton.classList.toggle('visible', onProject);
+    backButton.tabIndex = onProject ? 0 : -1;
   }
 }
 
@@ -917,6 +1091,7 @@ window.addEventListener('click', (e) => {
   if (e.target !== renderer.domElement) return; // clicked a window, not the scene
   const item = navItemAt({ x: e.clientX, y: e.clientY });
   if (item) item.onClick();
+  else if (roseAt({ x: e.clientX, y: e.clientY })) startSwapSpin(clock.getElapsedTime());
 });
 
 // --- Scroll hint -------------------------------------------------------------
@@ -956,6 +1131,7 @@ function animate() {
 
   updateCastle();
   checkArrival();
+  updateHistory();
   updateAbout(t);
   updateStations();
 
@@ -968,7 +1144,7 @@ function animate() {
 
   // Nav cubes: hover state, spin, grow, floating labels.
   const hoveredItem = navItemAt(pointer);
-  renderer.domElement.style.cursor = hoveredItem ? 'pointer' : '';
+  renderer.domElement.style.cursor = hoveredItem || roseAt(pointer) ? 'pointer' : '';
 
   NAV_ITEMS.forEach((item, i) => {
     const isHovered = item === hoveredItem;
@@ -989,5 +1165,6 @@ function animate() {
   renderer.clearDepth(); // so the HUD always draws on top
   renderer.render(hudScene, hudCamera);
 }
+jumpToStopFromAddress();
 renderer.setAnimationLoop(animate);
 onScroll();
