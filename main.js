@@ -250,12 +250,13 @@ scatterIcons();
 // Hovering (or tabbing to) a desktop icon swaps work.txt to that project's title
 // and types out its one-line description (data-blurb on the icon in index.html).
 // Moving off the icons brings back the default text.
-const BLURB_TYPE_SPEED = 350; // letters per second (0 = no typing effect, just show it)
+const BLURB_TYPE_SPEED = 350; // 0 = no typing effect, just show it (typing speed itself is TYPE.speed in typewriter.js)
 const workBlurb = document.getElementById('work-blurb');
 const blurbDefault = workBlurb ? workBlurb.innerHTML : '';
 let blurbFrame = null;
 let blurbRestore = null;
 let blurbShowing = null;
+let blurbTextEl = null; // the description line currently showing
 
 function showBlurb(icon) {
   if (!workBlurb) return;
@@ -267,21 +268,27 @@ function showBlurb(icon) {
 
   const title = icon.querySelector('.desk-label')?.textContent.trim() || '';
   const text = icon.dataset.blurb || '';
-  workBlurb.innerHTML = '<h3 class="blurb-title"></h3><p class="blurb-text"><span></span><span class="caret">▌</span></p>';
-  workBlurb.querySelector('.blurb-title').textContent = title;
-  const out = workBlurb.querySelector('.blurb-text span');
-
-  if (!BLURB_TYPE_SPEED) {
-    out.textContent = text;
-    return;
+  if (blurbTextEl) cancelTypeIn(blurbTextEl);
+  workBlurb.innerHTML = '<h3 class="blurb-title"></h3><p class="blurb-text"></p>';
+  const titleEl = workBlurb.querySelector('.blurb-title');
+  titleEl.textContent = title;
+  if (icon.dataset.year) {
+    // bold title, then the year in plain text (data-year on the icon in index.html)
+    const year = document.createElement('span');
+    year.className = 'year';
+    year.textContent = icon.dataset.year;
+    titleEl.append(' ', year);
   }
-  const start = performance.now();
-  const step = (now) => {
-    const n = Math.min(text.length, Math.floor(((now - start) / 1000) * BLURB_TYPE_SPEED));
-    out.textContent = text.slice(0, n);
-    if (n < text.length) blurbFrame = requestAnimationFrame(step);
-  };
-  blurbFrame = requestAnimationFrame(step);
+  // The description: words wrapped in *asterisks* become italic.
+  blurbTextEl = workBlurb.querySelector('.blurb-text');
+  blurbTextEl.innerHTML = blurbToHtml(text);
+  if (BLURB_TYPE_SPEED) typeIn(blurbTextEl, 0); // types it out, italics and all (typewriter.js)
+}
+
+// data-blurb text → safe HTML: *like this* → <i>like this</i>
+function blurbToHtml(text) {
+  const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return escaped.replace(/\*([^*]+)\*/g, '<i>$1</i>');
 }
 
 function restoreBlurb() {
@@ -290,6 +297,8 @@ function restoreBlurb() {
   clearTimeout(blurbRestore);
   blurbRestore = setTimeout(() => {
     cancelAnimationFrame(blurbFrame);
+    if (blurbTextEl) cancelTypeIn(blurbTextEl);
+    blurbTextEl = null;
     blurbShowing = null;
     workBlurb.innerHTML = blurbDefault;
   }, 250);
@@ -1016,21 +1025,6 @@ fetch(asset('fonts/Old London_Regular.json'))
     // Any element marked data-oldlondon in index.html (e.g. your name) gets drawn
     // in Old London too. The real text stays underneath for search engines.
     // Characters the font doesn't have (like emoji) are left as normal text.
-    document.querySelectorAll('[data-oldlondon]').forEach((el) => {
-      const text = el.textContent.trim();
-      const runs = []; // [{ inFont: true/false, text }]
-      for (const ch of text) {
-        const inFont = Boolean(font.glyphs[ch]);
-        const last = runs[runs.length - 1];
-        if (last && last.inFont === inFont) last.text += ch;
-        else runs.push({ inFont, text: ch });
-      }
-      const drawn = runs
-        .map((r) => (r.inFont ? wordToSvg(font, r.text) : `<span class="ol-plain" aria-hidden="true">${r.text}</span>`))
-        .join('');
-      el.innerHTML = `<span class="sr-only">${text}</span>${drawn}`;
-      el.classList.add('ol-drawn');
-    });
   })
   .catch((err) => console.warn('Old London font did not load — using plain text labels.', err));
 

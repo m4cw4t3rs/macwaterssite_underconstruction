@@ -28,6 +28,9 @@ Text locations: open `index.html` and search (Cmd + F) for the quoted placeholde
 - [ ] **Composition** — description (`[a few sentences about your concert / chamber music]`), works list (title · year · instrumentation · performers), hover blurb (`[one sentence about your concert / chamber works]`)
 - [x] **Decide** the section name → Concert Music
 
+### Years
+- [x] Years filled in (desktop icons + project headings), bracket style e.g. `[2024]`
+
 ### Small stuff
 - [ ] Update the hidden search-engine text at the very top of `index.html` (the `sr-only` block) and the `meta name="description"` line — they still say the old one-liner bio
 - [ ] Give every image a short `alt="…"` description as you add them (for screen readers + Google)

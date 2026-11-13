@@ -54,28 +54,64 @@ export function initTaskbar({ onNavigate }) {
   function refresh() {
     const panel = document.querySelector('.station-panel.visible');
     const windows = panel ? [...panel.querySelectorAll('.win-window')] : [];
+    const front = frontWindow(windows);
 
     tasks.replaceChildren(...windows.map((win) => {
       const btn = document.createElement('button');
       const title = win.querySelector('.win-titlebar span')?.textContent.trim() || 'window';
-      btn.className = 'tb-task' + (win.classList.contains('closed') ? '' : ' pressed');
+      const hidden = win.classList.contains('closed');
+      // pushed in = the window in front; raised = behind others; dimmed = hidden
+      btn.className = 'tb-task' + (win === front ? ' pressed' : '') + (hidden ? ' hidden-win' : '');
       btn.textContent = title;
       btn.title = title;
       btn.addEventListener('click', () => {
-        win.classList.remove('closed');
-        bringToFront(win);
+        // Windows 95 rules: hidden → bring back; behind → bring to front; in front → hide
+        if (hidden) {
+          win.classList.remove('closed');
+          bringToFront(win);
+        } else if (win === front) {
+          win.classList.add('closed');
+        } else {
+          bringToFront(win);
+        }
         refresh();
       });
       return btn;
     }));
   }
 
-  // Rebuild the buttons whenever a stop appears/disappears or a window opens/closes.
+  // Which open window is on top? (the one with the highest stacking number)
+  function frontWindow(windows) {
+    let best = null;
+    let bestZ = -Infinity;
+    windows.forEach((win) => {
+      if (win.classList.contains('closed')) return;
+      const z = parseInt(getComputedStyle(win).zIndex, 10) || 0;
+      if (z >= bestZ) { bestZ = z; best = win; } // ties: the later one in the page is on top
+    });
+    return best;
+  }
+
+  // Rebuild the buttons whenever a stop appears/disappears, a window opens/closes,
+  // or a window gets brought to the front.
   const watcher = new MutationObserver(refresh);
   document.querySelectorAll('.station-panel').forEach((panel) => {
     watcher.observe(panel, { attributes: true, attributeFilter: ['class'], subtree: true });
   });
+  document.addEventListener('window-front', refresh);
   refresh();
+
+  // The "_" (minimize) buttons in title bars hide their window too —
+  // bring it back from the taskbar.
+  document.querySelectorAll('.win-titlebar .win-buttons .win-btn:first-child').forEach((btn) => {
+    btn.setAttribute('role', 'button');
+    btn.setAttribute('title', 'minimize');
+    btn.style.cursor = 'pointer';
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      btn.closest('.win-window')?.classList.add('closed');
+    });
+  });
 
   // --- Clock ---
   const tick = () => {

@@ -13,6 +13,7 @@ let topZ = 10;
 // Put an element on top of the other draggable things.
 export function bringToFront(el) {
   el.style.zIndex = ++topZ;
+  document.dispatchEvent(new CustomEvent('window-front', { detail: { el } })); // lets the taskbar update
 }
 
 export function initDraggables(root = document) {
@@ -82,7 +83,9 @@ function makeDraggable(el) {
 
   handle.addEventListener('pointerdown', (e) => {
     if (e.button !== 0) return;              // left click / touch only
-    if (e.target.closest('button, a')) return; // let buttons and links work
+    // let buttons and links inside it work (but the draggable thing itself can be a "button", like desktop icons)
+    const control = e.target.closest('button, a, [role="button"]');
+    if (control && control !== el) return;
     e.preventDefault();
 
     start = { x: e.clientX, y: e.clientY, ox: offset.x, oy: offset.y };

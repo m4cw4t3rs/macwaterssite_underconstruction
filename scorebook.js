@@ -10,6 +10,9 @@ export function initScoreBooks() {
 
 const narrow = window.matchMedia('(max-width: 700px)');
 
+// true = clicking a page opens it full size in a new tab; false = pages aren't clickable
+const CLICK_PAGE_TO_ENLARGE = false;
+
 function setupBook(root) {
   const scores = [...root.querySelectorAll('.book-scores li')].map((li) => {
     const folder = li.dataset.folder || '';
@@ -19,6 +22,8 @@ function setupBook(root) {
       pages: Math.max(1, parseInt(li.dataset.pages, 10) || 1),
       pdf: li.dataset.pdf || '',
       ext: li.dataset.ext || 'jpg',
+      // data-orientation="landscape" → wide pages, shown one at a time at full width
+      landscape: li.dataset.orientation === 'landscape',
     };
   });
   if (!scores.length) return;
@@ -34,9 +39,11 @@ function setupBook(root) {
   const slots = [0, 1].map(() => {
     const page = document.createElement('div');
     page.className = 'book-page';
-    const link = document.createElement('a');
-    link.target = '_blank';
-    link.rel = 'noopener';
+    const link = document.createElement(CLICK_PAGE_TO_ENLARGE ? 'a' : 'span');
+    if (CLICK_PAGE_TO_ENLARGE) {
+      link.target = '_blank';
+      link.rel = 'noopener';
+    }
     const img = document.createElement('img');
     img.alt = '';
     img.draggable = false;
@@ -53,12 +60,14 @@ function setupBook(root) {
   let current = 0; // which piece
   let first = 1;   // the page number on the left
 
-  const perSpread = () => (narrow.matches ? 1 : 2);
+  const perSpread = () => (narrow.matches || scores[current].landscape ? 1 : 2);
   const pagePath = (s, n) => `${s.folder}p${String(n).padStart(2, '0')}.${s.ext}`;
 
   function render() {
     const s = scores[current];
     const per = perSpread();
+    spread.classList.toggle('single', per === 1);
+    spread.classList.toggle('landscape', s.landscape);
     first = Math.min(Math.max(1, first), s.pages);
     first -= (first - 1) % per; // keep spreads lined up: 1–2, 3–4, …
 
@@ -71,7 +80,7 @@ function setupBook(root) {
       const src = pagePath(s, n);
       slot.page.classList.remove('missing');
       if (slot.img.getAttribute('src') !== src) slot.img.src = src;
-      slot.link.href = src;
+      if (CLICK_PAGE_TO_ENLARGE) slot.link.href = src;
       slot.label.textContent = `${s.title}\np. ${n}`;
       slot.img.alt = `${s.title}, page ${n}`;
     });

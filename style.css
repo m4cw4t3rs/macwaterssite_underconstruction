@@ -153,6 +153,12 @@ html, body {
   background: #d4d0c8;
 }
 
+/* a hidden (minimized / closed) window's button: dimmed text */
+.tb-task.hidden-win {
+  color: #6b6b6b;
+  font-style: italic;
+}
+
 .tb-tasks {
   flex: 1;
   min-width: 0;
@@ -440,36 +446,46 @@ button.win-btn:active {
 }
 
 /* Window headings stay in the italic serif, for contrast with the mono body */
+/* Window headings (project titles): Times New Roman, bold italic */
 .win-body h2 {
   margin: 0 0 0.5em;
   font-family: "Times New Roman", Times, serif;
   font-size: 1.5rem;
+  font-weight: 700;
   font-style: italic;
+  line-height: 1.2;
 }
 
-/* Headings drawn in Old London (data-oldlondon) — e.g. your name */
-.ol-drawn {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.ol-drawn svg {
-  display: block;
-  height: 1.8em;   /* letter height — bigger number = bigger heading */
-  width: auto;
-  overflow: visible;
-}
-
-/* emoji (or anything else Old London doesn't have) sitting next to the letters */
-.ol-plain {
+/* Years next to titles — always in the monospace body font, never bold */
+.year {
+  font-family: "Space Mono", "Andale Mono", AndaleMono, "Lucida Console", Monaco, monospace;
+  font-weight: 400;
   font-style: normal;
-  font-size: 1.4em;
-  line-height: 1;
+  font-size: 0.6em;
+  letter-spacing: 0.02em;
+  margin-left: 0.5em;
+  white-space: nowrap;
 }
 
-.ol-drawn path {
-  fill: currentColor;
+/* Old London (your OldLondon.ttf) — used by any heading marked data-oldlondon,
+   like "about me". Delete data-oldlondon from a heading to make it bold Tahoma instead. */
+@font-face {
+  font-family: "Old London";
+  src: url("/fonts/OldLondon.ttf") format("truetype");
+  font-display: swap;
+}
+
+.win-body h2[data-oldlondon] {
+  font-family: "Old London", "Times New Roman", serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 2.3rem;   /* bigger number = bigger heading (Old London runs small) */
+  line-height: 1.1;
+}
+
+/* the year after an Old London heading: scale it back to normal year size */
+.win-body h2[data-oldlondon] .year {
+  font-size: 0.4em;
 }
 
 .win-body a { color: #0000ee; }
@@ -514,6 +530,11 @@ button.win-btn:active {
 
 .news-window li + li {
   margin-top: 0.4em;
+}
+
+/* works_list.txt (Concert Music): a little space between pieces */
+.works-list li + li {
+  margin-top: 0.8em;
 }
 /* Leaving a stop: everything sinks back into the dark like the castle —
    shrinks toward the middle of the screen, blurs, dims, and fades.
@@ -667,6 +688,7 @@ button.win-btn:active {
   margin: 0;
 }
 
+/* work.txt preview title — Times New Roman bold italic, like the window headings */
 .blurb-title {
   margin: 0 0 0.3em;
   font: italic bold 1.15rem "Times New Roman", Times, serif;
@@ -936,6 +958,7 @@ body.sound-ok .sound-hint .hint-hover { display: inline; }
 }
 
 .book-page a,
+.book-page span:not(.pg-label),
 .book-page img {
   display: block;
   width: 100%;
@@ -944,6 +967,10 @@ body.sound-ok .sound-hint .hint-hover { display: inline; }
 
 .book-page img {
   object-fit: contain;
+}
+
+/* only when CLICK_PAGE_TO_ENLARGE is on in scorebook.js */
+.book-page a img {
   cursor: zoom-in;
 }
 
@@ -979,6 +1006,16 @@ body.sound-ok .sound-hint .hint-hover { display: inline; }
   justify-content: center;
   gap: 12px;
   font: 12px Tahoma, "MS Sans Serif", Geneva, sans-serif;
+}
+
+/* one page at a time (landscape scores, and phones) */
+.book-spread.single {
+  grid-template-columns: 1fr;
+}
+
+/* landscape score pages: wider than tall */
+.book-spread.landscape .book-page {
+  aspect-ratio: 11 / 8.5;
 }
 
 @media (max-width: 700px) {
