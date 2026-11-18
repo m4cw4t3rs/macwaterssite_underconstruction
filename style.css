@@ -3,6 +3,11 @@ html, body {
   padding: 0;
 }
 
+/* anything marked hidden (e.g. a hidden project's icon) stays hidden, whatever its own style says */
+[hidden] {
+  display: none !important;
+}
+
 #gradient-bg {
   position: fixed;
   inset: 0;
@@ -338,6 +343,12 @@ html, body {
   cursor: grabbing;
 }
 
+/* Each window is its own layer: its grip, video, etc. stay inside it, so a window
+   lying on top of another covers everything in it (grips included). */
+.win-window {
+  isolation: isolate;
+}
+
 /* Size grip for data-resize windows (bottom-right corner, Windows 95 style) */
 .size-grip {
   position: absolute;
@@ -532,6 +543,20 @@ button.win-btn:active {
   margin-top: 0.4em;
 }
 
+/* long project descriptions scroll inside their window instead of running off-screen */
+.stage .win-body:not(.media) {
+  max-height: 52vh;
+  overflow-y: auto;
+}
+
+/* the small facts line under a project description (premiere, venue, tech) */
+.win-body p.details {
+  text-align: left; /* works lines read like a list, so they aren't justified */
+  font-size: 0.85em;
+  color: #444444;
+  line-height: 1.55;
+}
+
 /* works_list.txt (Concert Music): a little space between pieces */
 .works-list li + li {
   margin-top: 0.8em;
@@ -604,7 +629,7 @@ button.win-btn:active {
      top: 31%), so the two never overlap — raise the px number to push icons lower */
   top: calc(31% + 250px);
   transform: translateX(-50%);
-  width: min(94vw, 960px);   /* room for 6 icons per row on a laptop */
+  width: min(94vw, 680px);   /* fits exactly 4 icons per row (each icon ≈ 140px + 32px gap); the rest wrap below, centered */
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -1038,6 +1063,39 @@ body.sound-ok .sound-hint .hint-hover { display: inline; }
 }
 .media-ph.vertical { aspect-ratio: 9 / 16; }
 .media-ph.square   { aspect-ratio: 1; }
+.media-ph.crt      { aspect-ratio: 4 / 3; } /* Hi-8 / CRT video */
+
+/* Clip switcher (dreamvisions_excerpts.mp4): a row of buttons under the video */
+.win-body.clips video {
+  background: #000000;
+  aspect-ratio: 16 / 9;
+}
+
+.clip-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 5px;
+  background: #c0c0c0;
+}
+
+.clip-tab {
+  flex: 1 1 auto;
+}
+
+.clip-tab.active {
+  border-color: #404040 #ffffff #ffffff #404040; /* pushed in */
+  background: #d4d0c8;
+  font-weight: bold;
+}
+
+/* Loose photos: a thin white print border + shadow, like a snapshot */
+.float-img.photo {
+  border: 5px solid #ffffff;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.6);
+  box-sizing: border-box;
+}
+
 .media-ph.score    { aspect-ratio: 8.5 / 11; background: #f4f1e8; color: #6b6656; } /* a page of manuscript paper */
 
 /* Start menu: "work ▸" with a cascading project list */
@@ -1147,11 +1205,17 @@ body.sound-ok .sound-hint .hint-hover { display: inline; }
   padding-bottom: 44px;
 }
 
-/* Bio paragraphs: fully justified, with hyphenation so the spacing stays even */
-.about-window .win-body p {
+/* Window paragraphs: fully justified, with hyphenation so the spacing stays even.
+   (Lists — upcoming.txt, works_list.txt, film credits — stay left-aligned.) */
+.win-body p {
   text-align: justify;
   hyphens: auto;
   -webkit-hyphens: auto;
+}
+
+/* degrees list in the bio: left-aligned, one per line (not justified) */
+.about-window .win-body p.education {
+  text-align: left;
 }
 
 /* ...except the short contact line, which looks odd stretched out */

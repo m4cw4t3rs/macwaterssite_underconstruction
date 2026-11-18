@@ -71,7 +71,13 @@ setGradientColors(
 // start/hold are measured in screen-heights of scrolling.
 // The camera eases to cameraZ and "holds" there for `hold` screens.
 // Each stop with windows has a matching <section id="NAME-panel"> in index.html.
-const ZONE_DEFS = [
+
+// HIDE A PROJECT: put its name here and it disappears everywhere — desktop icon,
+// Start-menu entry, and its stop in the scroll (the other stops close up).
+// Its content stays in index.html; delete the name here to bring it back.
+const HIDDEN_STOPS = ['filmscoring'];
+
+const ALL_ZONES = [
   { name: 'home',          start: 0,   hold: 0, cameraZ: 50 },
   { name: 'about',         start: 1.2, hold: 0, cameraZ: 150 },
   { name: 'work',          start: 2.4, hold: 0, cameraZ: 250 }, // the desktop of project icons
@@ -85,6 +91,22 @@ const ZONE_DEFS = [
   { name: 'filmscoring',   start: 10.8, hold: 0, cameraZ: 950 },
   { name: 'composition',   start: 12.0, hold: 0, cameraZ: 1050 },
 ];
+
+// The stops actually in use: hidden ones removed, the rest re-spaced evenly
+// (same spacing as above) so there's no empty gap where a hidden one was.
+const STOP_SPACING = { start: 1.2, cameraZ: 100 };
+const ZONE_DEFS = ALL_ZONES
+  .filter((z) => !HIDDEN_STOPS.includes(z.name))
+  .map((z, i) => ({ ...z, start: i * STOP_SPACING.start, cameraZ: ALL_ZONES[0].cameraZ + i * STOP_SPACING.cameraZ }));
+
+// Hide everything that points to a hidden stop: desktop icons, Start-menu items, its windows.
+HIDDEN_STOPS.forEach((name) => {
+  document.querySelectorAll(`[data-nav="${name}"]`).forEach((el) => {
+    (el.closest('li') || el).hidden = true;
+  });
+  const panel = document.getElementById(`${name}-panel`);
+  if (panel) panel.hidden = true;
+});
 
 // Shortcut names for links (none needed right now).
 const ZONE_ALIASES = {};
@@ -177,7 +199,8 @@ function checkArrival() {
 // (the castle is the plain address). Arriving at a stop adds it to the browser
 // history, so Back/Forward fly between stops, links open straight to a project,
 // and refreshing keeps you where you were.
-const BASE_TITLE = document.title;
+const BASE_TITLE = document.title;                 // full title, shown on the castle page
+const SHORT_TITLE = BASE_TITLE.split(' · ')[0];   // "MAC WATERS 🏰", used on the other stops
 let currentStop = null;  // the stop the address bar currently shows
 let fromHistory = false; // true while flying because of Back/Forward
 
@@ -206,7 +229,7 @@ function updateHistory() {
   else history.pushState({ stop: here.name }, '', url);
   fromHistory = false;
   currentStop = here.name;
-  document.title = here.name === 'home' ? BASE_TITLE : `${BASE_TITLE} · ${stopLabel(here.name)}`;
+  document.title = here.name === 'home' ? BASE_TITLE : `${SHORT_TITLE} · ${stopLabel(here.name)}`;
 }
 
 // Back / Forward (or typing an address with #something) → fly there.
@@ -437,8 +460,8 @@ loadCastle(CASTLE_FILES);
 // false = the title stays behind at the castle like before
 const TITLE_AS_HEADER = true;
 const TITLE_HEADER = {
-  top: 0.9,     // where its top edge sits: 1 = touching the top of the screen, 0.8 = lower
-  scale: 0.28,  // its size as a header (it starts at 0.4)
+  top: 0.92,    // where its top edge sits: 1 = touching the top of the screen, 0.8 = lower
+  scale: 0.21,  // its size as a header (it starts at 0.4 on the landing page; the castle scales with it)
 };
 const TITLE_DISTANCE = 50; // how far in front of the camera the header floats
 

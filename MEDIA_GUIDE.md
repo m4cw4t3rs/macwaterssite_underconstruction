@@ -80,6 +80,26 @@ This keeps ~15% of the castle's 1.3 million points and shrinks its textures. The
 automatically uses `castle_lite.glb` if it exists (and falls back to `castle_web.glb` if not).
 If it looks too chunky, try `--simplify-ratio 0.3`.
 
+## Text formatting on project pages
+
+Each project window has: a heading (title + `<span class="year">[year]</span>`), a short
+description paragraph, then the **works lines** — one line per work/presentation, in this format:
+
+```
+Title (Year), medium, site
+```
+
+- **Title** in italics, **Year** in parentheses, **medium** lowercase, **site** = where it happened
+  (venue / festival / exhibition, plus city if useful)
+- in `index.html`:
+  ```html
+  <p class="details"><i>Title</i> (2024), medium, Site, City<br>
+  <i>Second Work</i> (2025), medium, Site</p>
+  ```
+- examples: *TikTokBox* (2024), live audiovisual performance, New Music Festival ·
+  *SHOKWII* (2023), film (20 min), (A)TEMPORALITIES showcase
+- keep descriptive detail in the paragraph above, not in the works lines
+
 ## Notes for each project (a few sentences is plenty)
 
 Put a `notes.txt` in each project folder with:

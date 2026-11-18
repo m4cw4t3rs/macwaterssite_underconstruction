@@ -2,91 +2,90 @@
 
 Tick items off by changing `[ ]` to `[x]`. (This file isn't published to the site.)
 Text locations: open `index.html` and search (Cmd + F) for the quoted placeholder.
+Last checked against the files: Nov 18
 
 ---
 
-## 1. Writing
+## 1. Writing (index.html)
 
-### Work desktop
-- [ ] **work.txt intro** — search `[a general intro to the work]`
-- [ ] **Hover blurbs** (one sentence each, in `data-blurb="…"` on each icon — no straight `"` quotes inside):
-  - [ ] Book of Hours — `a forthcoming album. [one sentence]`
-  - [ ] TikTokBox — `[one-sentence description]`
-  - [ ] soloviolarecital — `[one-sentence description]`
-  - [ ] SHOKWII — `[one-sentence description]`
-  - [ ] Film Scoring — `original scores for films by other artists. [one sentence]`
-  - [ ] Double-check the two drafts I wrote (DreamVisions+, GUIDED_MEDITATIONS)
+### Done
+- [x] work.txt intro
+- [x] All 8 desktop hover blurbs
+- [x] Years on every desktop icon + project heading (bracket style, e.g. `[2024]`)
+- [x] Concert Music: works list (3 pieces with instrumentation + performers), hover blurb, section name
 
-### Project pages
-- [ ] **DreamVisions+** — description (`[ongoing media project — a few sentences about it]`) + details line (`[WALLED_GARDEN installation · live performance · year]`)
-- [ ] **GUIDED_MEDITATIONS** — description (`[description]`), year/credits (`[year · credits]`)
-- [ ] **Book of Hours** — album description (`[album description]`), release date
-- [ ] **TikTokBox** — description
-- [ ] **soloviolarecital** — description: program, venue, date
-- [ ] **SHOKWII** — description
-- [ ] **Film Scoring** — fill in the credits list (film title · director · year), add/remove lines as needed
-- [ ] **Composition** — description (`[a few sentences about your concert / chamber music]`), works list (title · year · instrumentation · performers), hover blurb (`[one sentence about your concert / chamber works]`)
-- [x] **Decide** the section name → Concert Music
+### Project page text still to write
+- [ ] **Concert Music** — intro paragraph: `[a few sentences about your concert / chamber music]`
+- [x] **DreamVisions+** — `[ongoing media project — a few sentences about it]` + details line `[WALLED_GARDEN installation · live performance · year]` (the year is already in the heading — you can drop it from this line)
+- [x] **GUIDED_MEDITATIONS** — `[description]` + `[credits]`
+- [ ] **Book of Hours** — `[album description]`
+- [x] **TikTokBox** — `[description]`
+- [x] **soloviolarecital** — `[description — program, venue, date]`
+- [x] **SHOKWII** — `[description]`
+- [x] **Film Scoring** — credits list (4 films)
 
-### Years
-- [x] Years filled in (desktop icons + project headings), bracket style e.g. `[2024]`
+### Works lines — fill in the blanks (format: *Title* (Year), medium, site — see MEDIA_GUIDE.md)
+- [x] DreamVisions+_WALLED_GARDEN.exe — `([year])` and `[site]` (gallery / exhibition)
+- [x] GUIDED_MEDITATION_1 — `[site]` (where it was shown/screened, or delete `, [site]` if nowhere specific)
+- [x] TikTokBox — `[city]` for the New Music Festival (or delete it)
+- [x] SHOKWII — `[city]` for the (A)TEMPORALITIES showcase (or delete it)
 
 ### Small stuff
-- [ ] Update the hidden search-engine text at the very top of `index.html` (the `sr-only` block) and the `meta name="description"` line — they still say the old one-liner bio
-- [ ] Give every image a short `alt="…"` description as you add them (for screen readers + Google)
+- [x] Hidden search-engine text + page description updated from the new bio
+- [ ] Give every new image a short `alt="…"` description as you add them
 
 ---
 
 ## 2. Media to gather
 
-Put **full-quality originals** in `assets_src/media-originals/<project>/` (not published) and ask Claude
-to make web versions — or follow the export settings in `MEDIA_GUIDE.md` and drop them straight
-into `public/media/<project>/`. Anything over a couple of minutes → Vimeo, and paste the link.
+Drop **full-quality originals** in `assets_src/media-originals/<project>/` (not published) and ask
+Claude to make web versions. Anything long → Vimeo/YouTube/Bandcamp, and paste the link.
 
-- [ ] **DreamVisions+**
-  - [ ] gameplay video (short excerpt) → `public/media/dreamvisions/gameplay/`
-  - [ ] WALLED_GARDEN installation photos → `public/media/dreamvisions/walled-garden/`
-  - [ ] live performance video and/or photos → `public/media/dreamvisions/performance/`
-- [ ] **GUIDED_MEDITATIONS**
-  - [ ] upload the two full pieces to Vimeo → paste link (search `[watch the full pieces → Vimeo link]`, put the URL in `href="#"`)
-  - [ ] (optional) tell Claude if you want a different excerpt than 0:30–1:30 for either video
-- [ ] **Book of Hours**
-  - [ ] album art (square, ~1200×1200 JPG)
-  - [ ] pre-save link now → Bandcamp album link at release (Claude swaps in the player)
-- [ ] **TikTokBox** — vertical video excerpt(s) → `public/media/tiktokbox/`
-- [ ] **soloviolarecital** — recital video (excerpt and/or Vimeo link), any photos/program → `public/media/violarecital/`
-- [ ] **SHOKWII** — video/images → `public/media/shokwii/`
-- [ ] **Film Scoring** — a 60–90 s scoring reel (Vimeo or short mp4) → `public/media/for-others/scoring/`
-- [x] **Desktop icon** `filmscoring.png`
-- [ ] **Desktop icon** still missing: `composition.png` (47×47, transparent) → `public/media/thumbs/`
-- [ ] **Concert Music — recordings** for playlist.exe: MP3s (192–256 kbps) in `public/media/composition/audio/`, named `track-01.mp3`, `track-02.mp3`, … — then edit each track's title/performers (search `[title] — [performers]`). Keep each under ~20 MB (excerpts are fine).
-- [ ] **Concert Music — scores** for scores.book: one folder per piece in `public/media/composition/scores/` (e.g. `piece-1/`), page images named `p01.jpg`, `p02.jpg`, … (~1600 px tall). Then in `index.html` (search `data-folder=`) set each piece's title, folder, page count, and optional PDF.
-- [ ] **Decide:** do graphics work for other artists and collaborations get their own stops? (folders exist: `for-others/graphics/`, `for-others/collabs/`)
+### Done
+- [x] GUIDED_MEDITATIONS: two video excerpts (playing, hover-for-sound)
+- [x] Concert Music: 3 recordings in playlist.exe, 3 scores in scores.book (all pages + PDFs)
+- [x] DreamVisions+ logo
+- [x] All 8 desktop icons (incl. `composition.png`, `filmscoring.png`)
+
+### Still needed
+- [x] **DreamVisions+** — logo, 4 performance excerpts (clip switcher), WALLED_GARDEN photos + looping clip
+  - [ ] Hi-8 gameplay rip → loop for the `WALLED_GARDEN.exe` window (drop in `assets_src/media-originals/dreamvisions/`)
+  - [ ] (later) a proper performance trailer — can replace or join the excerpt buttons
+- [ ] **GUIDED_MEDITATIONS** — upload the full pieces to Vimeo → paste the link (search `[watch the full pieces → Vimeo link]`, put the URL in `href="#"`)
+- [ ] **Book of Hours** — album art (square, ~1200×1200) + pre-save link now → Bandcamp at release
+- [ ] **TikTokBox** — vertical video excerpt(s)
+- [ ] **soloviolarecital** — recital video (excerpt and/or Vimeo link), photos/program
+- [ ] **SHOKWII** — the film (Vimeo/YouTube link or short excerpt) + stills
+- [ ] **Film Scoring** — a 60–90 s scoring reel (Vimeo or short mp4)
+- [ ] **Decide:** do graphics work for other artists / collaborations get their own stops? (folders exist: `for-others/graphics/`, `for-others/collabs/`)
+- [ ] **Decide:** should the "open pdf ↗" score downloads stay public? (to hide one, empty its `data-pdf=""`)
 
 ---
 
-## 3. Technical (in Terminal, from ~/code/macwaterssite)
+## 3. Technical (Terminal, from ~/code/macwaterssite)
 
-- [ ] **Lighter castle** (biggest performance win) — run the `gltf-transform` command in `MEDIA_GUIDE.md`, then check the castle still looks right
-- [ ] **Security warnings** — ask Claude to walk through `npm audit fix` together
+- [ ] **Lighter castle** — biggest performance win, ~5 minutes: run the `gltf-transform` command in `MEDIA_GUIDE.md`, then check the castle still looks right
+- [ ] **Security warnings** — walk through `npm audit fix` with Claude
 - [ ] Commit + push at the end of every session (`git add .` → `git commit -m "…"` → `git push`)
 
-## 4. Ask Claude to build (once the files/text above exist)
+## 4. Ask Claude to build
 
-- [ ] Media windows for each project as the files come in (DreamVisions+ gallery + videos, Book of Hours player, TikTokBox video, recital, SHOKWII, scoring reel)
-- [ ] **Mobile pass** — shrink the castle/ring header on phones, tidy stacked windows, test on a real phone (via the Vercel preview)
-- [ ] **Link preview card** — the image + text that shows when someone shares macwaters.studio in a text/Instagram/email
+- [ ] Media windows for each project as files come in (DreamVisions+ gallery + videos, Book of Hours art/player, TikTokBox video, recital, SHOKWII, scoring reel)
+- [ ] **Mobile pass** — shrink the castle/ring header on phones, tidy stacked windows, test on a real phone
+- [ ] **Link preview card** — the image + text shown when someone shares macwaters.studio
 - [ ] **Cleanup** — remove leftover placeholders, delete `assets_src/style.before-restore.css`, stop tracking `.DS_Store` files
-- [ ] **Decide:** keep or remove the 🚧 "under construction" icon in the taskbar tray and the "scroll ↓" hint at launch
+- [ ] **Decide:** keep or remove the 🚧 icon in the taskbar tray and the "scroll ↓" hint at launch
+- [ ] **Decide:** launch with every project, or hide the unfinished ones until they're ready
+  - Film Scoring is **hidden** for launch (`HIDDEN_STOPS` in `main.js`) — remove `'filmscoring'` from that list once the films are out
 
 ---
 
 ## 5. Launch
 
-- [ ] Full click-through on the Vercel preview (laptop + phone): every cube, icon, Start-menu link, window, video
-- [ ] `npm run deploy` → **macwaters.studio** goes live with the new site
-- [ ] Check macwaters.studio loads (give it a few minutes), including on your phone
-- [ ] (Optional) disconnect the Vercel preview, or keep it as your test copy for future changes
+- [ ] Full click-through on the Vercel preview (laptop + phone): every cube, icon, Start-menu link, window, video, back button, browser Back
+- [ ] `npm run deploy` → **macwaters.studio** goes live
+- [ ] Check macwaters.studio (give it a few minutes), including on your phone
+- [ ] (Optional) disconnect the Vercel preview, or keep it as your test copy
 
 ## Later
-- [ ] The point-and-click castle game (click the blue cube → go inside the castle rooms)
+- [ ] The point-and-click castle game (blue cube → inside the castle rooms)

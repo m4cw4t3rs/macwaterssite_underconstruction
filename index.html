@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MAC WATERS 🏰</title>
-    <meta name="description" content="mac waters is a multimedia composer/violist based in vermont." />
+    <title>MAC WATERS 🏰 · multimedia composer-performer</title>
+    <meta name="description" content="mac waters is a multimedia composer, violist, and improviser based in vermont, working across concert music, installation, film, XR, and game design." />
     <!-- Space Mono (body font) from Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,9 +15,13 @@
   </head>
   <body>
     <!-- Hidden from view, but read by search engines and screen readers -->
+    <!-- (keep this in step with the bio in about_mac.txt) -->
     <div class="sr-only">
-      <h1>mac waters</h1>
-      <p>mac waters is a multimedia composer/violist based in vermont.</p>
+      <h1>mac waters — multimedia composer, violist, and improviser</h1>
+      <p>mac waters is a multimedia composer, violist, and improviser based in vermont. a graduate of the dartmouth college mfa in sonic practice, mac composes multichannel and electroacoustic music for concert, installation, and film settings, and works across interactive media and video, extended reality, improvisation, graphic design, and game design.</p>
+      <p>mac’s works have been performed by fonema consort, wet ink, mivos quartet, conrad tao, ostravska banda, and ars futura, and mac has performed as a violist-improviser with tomeka reid’s stringtet and anthony braxton’s creative orchestra.</p>
+      <p>BA Music &amp; Medieval &amp; Renaissance Studies, Columbia University. MFA Sonic Practice, Dartmouth College.</p>
+      <p>work: DreamVisions+, GUIDED_MEDITATIONS, Book of Hours, TikTokBox, soloviolarecital, SHOKWII, and concert music including pop song, Justin Bieber — Baby (remix), and erosion as a form of creation.</p>
       <p>contact: <a href="mailto:macarthur.waters@gmail.com">macarthur.waters@gmail.com</a></p>
     </div>
 
@@ -41,6 +45,8 @@
           <p>mac waters is a multimedia composer, violist, and improviser based in vermont. a graduate of the dartmouth college mfa in sonic practice, mac composes multichannel and electroacoustic music for concert, installation, and film settings, and works across interactive media and video, extended reality, improvisation, graphic design, and game design.</p>
           <p>mac’s works have been performed by fonema consort, wet ink, mivos quartet, conrad tao, ostravska banda, and ars futura, and mac has performed as a violist-improviser with tomeka reid’s stringtet and anthony braxton’s creative orchestra.</p>
           <p>at dartmouth college, mac is the digital technician specialist for the departments of film &amp; media studies and studio art, and previously served as an XR for the humanities fellow at the DREAM Studio (dartmouth resources for emergent arts and media).</p>
+          <p class="details education">BA Music &amp; Medieval &amp; Renaissance Studies, Columbia University<br>
+          MFA Sonic Practice, Dartmouth College</p>
           <p>contact: <a href="mailto:macarthur.waters@gmail.com">macarthur.waters@gmail.com</a></p>
         </div>
       </div>
@@ -157,29 +163,74 @@
 
     <!-- DreamVisions+ -->
     <section id="dreamvisions-panel" class="station-panel stage" aria-label="DreamVisions+">
-      <div class="win-window" data-drag data-fly="left" style="left: 10%; top: 44%; width: 420px;">
+      <div class="win-window" data-drag data-fly="left" style="left: 10%; top: 30%; width: 450px;">
         <div class="win-titlebar" data-drag-handle>
           <span>dreamvisions+.txt</span>
           <button class="win-btn" data-close aria-label="close this window">&times;</button>
         </div>
-        <div class="win-body">
+        <div class="win-body" style="max-height: 50vh;">
           <h2>DreamVisions+ <span class="year">[2025-ongoing]</span></h2>
-          <p>[ongoing media project — a few sentences about it]</p>
-          <p>[WALLED_GARDEN installation · live performance · year]</p>
+          <p>a transdigital, transhistorical odyssey into the realm of fiction and truth, reality and virtuality. rooted in late medieval dream-vision poems (Chaucer’s <i>House of Fame</i>, Langland’s <i>Piers Plowman</i>, the <i>Roman de la Rose</i>), DreamVisions+ reads these psychedelic allegories as proto-VR and stages a multimedia dream vision of the digital age: an expansive intermedia universe spanning live performance, immersive projection, game, and installation. in <i>DreamVisions+_WALLED_GARDEN.exe</i>, visitors boot up a lost-to-time video game on a CRT, where an anthropomorphized rose explores a walled garden, conversing with Lady Reason, Diversion, and Idleness.</p>
+          <!-- works lines: <i>Title</i> (Year), medium, site — one per line, joined with <br> -->
+          <p class="details"><i>DreamVisions+</i> (2025), workshop performance, DREAM Studio, Dartmouth College<br><br>
+          <i>DreamVisions+_WALLED_GARDEN.exe</i> (2026), interactive game installation, <a href="https://studioart.dartmouth.edu/news/2026/10/hours-works-vac-staff" target="_blank" rel="noopener">Off Hours</a>, Nearburg Gallery, Hanover, NH</p>
         </div>
       </div>
+
+      <!-- WALLED_GARDEN installation photos: behind the other windows (they come earlier
+           in the page), in front of the description. Move with left/top, size with width. -->
+      <!-- a silent looping clip (like a GIF) of the CRT title screen, styled like the photos -->
+      <video class="float-img photo" src="/media/dreamvisions/walled-garden/walled-garden-loop.mp4"
+             poster="/media/dreamvisions/walled-garden/walled-garden-loop-poster.jpg"
+             muted loop playsinline preload="none" aria-label="the DreamVisions+_WALLED_GARDEN.exe title screen glowing on a CRT"
+             data-drag data-fly="down" style="left: 49%; top: 30%; width: 190px; rotate: 4deg; --delay: 0.3s;"></video>
+      <img class="float-img photo" src="/media/dreamvisions/walled-garden/walled-garden-01.jpg" alt="DreamVisions+_WALLED_GARDEN.exe: a CRT, lamp, and plant in a 1998-style living room corner"
+           data-drag data-fly="up" draggable="false"
+           style="left: 39.5%; top: 42%; width: 210px; rotate: -5deg; --delay: 0.2s;">
 
       <!-- DreamVisions+ logo, floating over the top of the window. Move it with left/top,
            size it with width, tilt it with rotate. (Comes after the window, so it sits in front.) -->
       <img class="float-img" src="/media/dreamvisions/dreamvisions_logo.png" alt="DreamVisions+"
            data-drag data-fly="right" draggable="false"
-           style="left: 6%; top: 29%; width: min(46vw, 600px); rotate: 0deg; --delay: 0.15s;">
+           style="left: 35%; top: 22%; width: min(30vw, 600px); rotate: 0deg; --delay: 0.15s;">
+
+      <!-- Performance excerpts: one window, a button per clip (add/remove buttons freely).
+           Files live in public/media/dreamvisions/performance/ -->
+      <div class="win-window" data-drag data-resize data-fly="right" style="right: 4%; top: 39%; width: min(40vw, 540px); --delay: 0.1s;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>dreamvisions_excerpts.mp4</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body media clips" data-clips>
+          <video src="/media/dreamvisions/performance/garden.mp4" poster="/media/dreamvisions/performance/garden-poster.jpg"
+                 controls playsinline preload="none" aria-label="DreamVisions+ excerpt"></video>
+          <div class="clip-tabs" role="group" aria-label="choose an excerpt">
+            <button class="player-btn clip-tab active" data-src="/media/dreamvisions/performance/garden.mp4" data-poster="/media/dreamvisions/performance/garden-poster.jpg">garden</button>
+            <button class="player-btn clip-tab" data-src="/media/dreamvisions/performance/violaimprov.mp4" data-poster="/media/dreamvisions/performance/violaimprov-poster.jpg">viola</button>
+            <button class="player-btn clip-tab" data-src="/media/dreamvisions/performance/narcissus.mp4" data-poster="/media/dreamvisions/performance/narcissus-poster.jpg">narcissus</button>
+            <button class="player-btn clip-tab" data-src="/media/dreamvisions/performance/lucid.mp4" data-poster="/media/dreamvisions/performance/lucid-poster.jpg">lucid</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gameplay: a silent loop, like a game's attract screen on the CRT.
+           When the Hi-8 rip is ready, replace the placeholder with:
+           <video src="/media/dreamvisions/gameplay/gameplay.mp4" muted loop playsinline preload="none"></video> -->
+      <div class="win-window" data-drag data-resize data-fly="up" style="left: 42%; top: 62%; width: 280px; --delay: 0.25s;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>WALLED_GARDEN.exe</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body media">
+          <div class="media-ph crt">Hi-8 gameplay<br>(coming soon)</div>
+        </div>
+      </div>
     </section>
 
     <!-- GUIDED_MEDITATIONS: two videos that play together -->
     <section id="meditations-panel" class="station-panel stage" aria-label="GUIDED_MEDITATIONS">
       <!-- (video 1 is 4:3 and video 2 is 16:9, so window 1 is 3/4 as wide — same height) -->
-      <div class="win-window" data-drag data-resize data-fly="left" style="left: 9%; top: 34%; width: min(25vw, 345px);">
+      <div class="win-window" data-drag data-resize data-fly="right" style="left: 42%; top: 32%; width: min(25vw, 345px); --delay: 0.1s;">
         <div class="win-titlebar" data-drag-handle>
           <span>meditation_1.mp4</span>
           <span class="sound-badge" aria-hidden="true">🔇</span>
@@ -197,7 +248,7 @@
           </div>
         </div>
       </div>
-      <div class="win-window" data-drag data-resize data-fly="right" style="right: 7%; top: 34%; width: min(33.3vw, 460px); --delay: 0.1s;">
+      <div class="win-window" data-drag data-resize data-fly="right" style="right: 10%; top: 53%; width: min(33.3vw, 460px); --delay: 0.2s;">
         <div class="win-titlebar" data-drag-handle>
           <span>meditation_2.mp4</span>
           <span class="sound-badge" aria-hidden="true">🔇</span>
@@ -217,15 +268,17 @@
       </div>
 
       <!-- EDIT THE DESCRIPTION HERE -->
-      <div class="win-window" data-drag data-fly="up" style="left: calc(50% - 220px); top: 66%; width: 440px; --delay: 0.2s;">
+      <div class="win-window" data-drag data-fly="left" style="left: 5%; top: 33%; width: min(32vw, 460px);">
         <div class="win-titlebar" data-drag-handle>
           <span>GUIDED_MEDITATIONS.txt</span>
           <button class="win-btn" data-close aria-label="close this window">&times;</button>
         </div>
         <div class="win-body">
           <h2>GUIDED_MEDITATIONS <span class="year">[2024-ongoing]</span></h2>
-          <p>[description]</p>
-          <p>[credits]</p>
+          <p>a series of video meditations for scrolling: guides to entering the digital stream with reverence for the Algorithm. 🧘☮️📲 time-stretched AI voices lead the listener through a “fourteen day cybermindfulness enlightenment journey," with original electronic music, viola improvisation, and Hi-8 video tapes as well as 3D animations built in Unity.</p>
+          <!-- works lines: <i>Title</i> (Year), medium, site — one per line, joined with <br> -->
+          <p class="details"><i>GUIDED_MEDITATION_1</i> (2024), Hi-8 video<br>
+          <i>GUIDED_MEDITATION_2</i> (2026), electroacoustic performance with video and 3D animation, <a href="https://unprofessionalvarietyshow.com" target="_blank" rel="noopener">Unprofessional Variety Show</a>, New York, NY</p>
           <p><a href="#">[watch the full pieces → Vimeo link]</a></p>
         </div>
       </div>
@@ -264,7 +317,9 @@
         </div>
         <div class="win-body">
           <h2>TikTokBox <span class="year">[2022/2024]</span></h2>
-          <p>[description]</p>
+          <p>a live improvised performance that turns my TikTok For You Page into a well of audiovisual material. custom Max/MSP/Jitter patches distort my phone’s live feed across two ten-foot screens and a 13-channel spatial audio array, while a motion-sensing Arduino bodysuit lets my whole body, not just my scrolling thumb, play the feed. a duet between a user and their feed: the individual and the collective, the conscious and the subconscious.</p>
+          <!-- works lines: <i>Title</i> (Year), medium, site — one per line, joined with <br> -->
+          <p class="details"><i>TikTokBox</i> (2024), live audiovisual performance, <a href="https://hop.dartmouth.edu/events/mac-waters" target="_blank" rel="noopener">Dartmouth College New Music Festival</a>, Hanover, NH</p>
         </div>
       </div>
       <div class="win-window" data-drag data-resize data-fly="right" style="left: 56%; top: 33%; width: 240px; --delay: 0.12s;">
@@ -287,7 +342,9 @@
         </div>
         <div class="win-body">
           <h2>soloviolarecital <span class="year">[2024]</span></h2>
-          <p>[description — program, venue, date]</p>
+          <p>a freely improvised viola solo, captured by a 16-camera OptiTrack motion capture system, becomes the animation for an avatar on a virtual soundstage. as the improvisation builds and the camera closes in, the digital underbelly surfaces: textures dissolve to a grey humanoid model, the skeleton pokes through, fingers fall out of sync, the bow pierces the instrument. then the sound stops, and the video snaps to the real me, making eye contact with the camera.</p>
+          <!-- works lines: <i>Title</i> (Year), medium, site — one per line, joined with <br> -->
+          <p class="details"><i>soloviolarecital</i> (2024), motion capture video, DREAM Studio, Dartmouth College</p>
         </div>
       </div>
       <div class="win-window" data-drag data-resize data-fly="right" style="right: 9%; top: 35%; width: min(36vw, 480px); --delay: 0.12s;">
@@ -310,7 +367,9 @@
         </div>
         <div class="win-body">
           <h2>SHOKWII <span class="year">[2023]</span></h2>
-          <p>[description]</p>
+          <p>locked behind a decade-old password is an archive of videos made by a hyperactive ten-year-old with an internet connection and a webcam: Shokwii101, the YouTube channel I hosted in 2010. SHOKWII collages, distorts, and remixes that archive, using YouTube itself as an instrument, into a dance sequence, a housephone montage, a commercial break, and a collapse. built around failed virality, awkward silences, and low view counts, it is of me but not about me.</p>
+          <!-- works lines: <i>Title</i> (Year), medium, site — one per line, joined with <br> -->
+          <p class="details"><i>SHOKWII</i> (2023), film (20 min), (A)TEMPORALITIES showcase, Hanover, NH</p>
         </div>
       </div>
       <div class="win-window" data-drag data-resize data-fly="right" style="right: 10%; top: 36%; width: min(34vw, 440px); --delay: 0.12s;">
@@ -342,10 +401,12 @@
         </div>
         <div class="win-body">
           <h2>Film Scoring</h2>
-          <ul>
-            <li><b>[film title]</b> — dir. [name], [year]</li>
-            <li><b>[film title]</b> — dir. [name], [year]</li>
-            <li><b>[film title]</b> — dir. [name], [year]</li>
+          <!-- credits: <i>Title</i> (Year), medium, dir./prod. Name, site — newest first -->
+          <ul class="works-list">
+            <li><i>Ten Seconds</i> (2027, forthcoming), short film, prod. Jay MacNamee (formerly <i>Do I Look Like Your Wife?</i>)</li>
+            <li><i>PIG</i> (forthcoming), film, dir. Kaley Mamo</li>
+            <li><i>Old Man River</i> (2026), short documentary, dir. Iyabo Kwayana, world premiere, <a href="https://blackstarprojects.org/festival/2026/films/old-man-river" target="_blank" rel="noopener">BlackStar Film Festival</a>, Philadelphia, PA</li>
+            <li><i>Sankyo Stream</i> (2019–2022), experimental web series, dir. Fergus Campbell, music for two episodes, <a href="https://gamethefinch.com/sankyo-stream" target="_blank" rel="noopener">gamethefinch.com</a></li>
           </ul>
         </div>
       </div>

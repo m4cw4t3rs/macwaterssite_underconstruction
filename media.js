@@ -26,11 +26,15 @@ export function initMedia() {
       const here = panel.classList.contains('visible');
       videos.forEach((v) => {
         if (here) {
-          v.preload = 'auto';
-          v.play().catch(() => {});
+          // Only silent loops (videos marked `muted` in index.html) start by themselves;
+          // videos with sound wait for the visitor to press play.
+          if (v.defaultMuted) {
+            v.preload = 'auto';
+            v.play().catch(() => {});
+          }
         } else {
           v.pause();
-          setMuted(v, true);
+          if (v.dataset.soundGroup) setMuted(v, true);
         }
       });
     };
@@ -38,10 +42,37 @@ export function initMedia() {
     sync();
   });
 
-  // --- If the music player starts, mute any video that has its sound on ---
+  // --- Only one sound at a time ---
+  // A video with sound starting → tell the music player (and other videos) to hush.
+  document.querySelectorAll('video').forEach((v) => {
+    v.addEventListener('play', () => {
+      if (!v.muted) document.dispatchEvent(new CustomEvent('site-sound', { detail: { source: v } }));
+    });
+  });
+  // Another sound started → mute hover-for-sound videos, pause any other playing video.
   document.addEventListener('site-sound', (e) => {
-    if (e.detail?.source instanceof HTMLVideoElement) return;
-    document.querySelectorAll('video').forEach((v) => { if (!v.muted) setMuted(v, true); });
+    const source = e.detail?.source;
+    document.querySelectorAll('video').forEach((v) => {
+      if (v === source || v.muted) return;
+      if (v.dataset.soundGroup && source instanceof HTMLVideoElement && source.dataset.soundGroup === v.dataset.soundGroup) return;
+      if (v.dataset.soundGroup) setMuted(v, true);
+      else v.pause();
+    });
+  });
+
+  // --- Clip switchers: one video window, a row of buttons to pick the clip ---
+  // <div data-clips> holding a <video> + buttons with data-src (and data-poster).
+  document.querySelectorAll('[data-clips]').forEach((box) => {
+    const video = box.querySelector('video');
+    const tabs = [...box.querySelectorAll('[data-src]')];
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        tabs.forEach((t) => t.classList.toggle('active', t === tab));
+        video.poster = tab.dataset.poster || '';
+        video.src = tab.dataset.src;
+        video.play().catch(() => {});
+      });
+    });
   });
 
   // --- Sound groups ---
