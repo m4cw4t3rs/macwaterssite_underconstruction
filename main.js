@@ -154,10 +154,13 @@ HIDDEN_STOPS.forEach((name) => {
 const ZONE_ALIASES = {};
 
 // How scrolling settles:
-//   'mandatory'  = always comes to rest on a stop (never in between)
+//   'paged'      = one scroll gesture (wheel flick, trackpad swipe, arrow key) = one stop.
+//                  Handled here in main.js, so it feels the same in Chrome, Safari, Firefox.
+//   'mandatory'  = the browser's own snapping (smooth in Safari, stuttery in Chrome)
 //   'proximity'  = snaps only when you stop close to a stop
 //   'none'       = free scrolling, no snapping
-const SCROLL_SNAP = 'mandatory';
+const SCROLL_MODE = 'paged';
+const SCROLL_SNAP = SCROLL_MODE === 'paged' ? 'none' : SCROLL_MODE;
 
 let zones = [];
 
@@ -247,7 +250,8 @@ function checkArrival() {
   if (scrolled && cameraHere) flyingTo = null;
 }
 // ...or as soon as the visitor takes over the scrolling themselves.
-['wheel', 'touchstart', 'keydown'].forEach((type) => {
+// (In 'paged' mode the wheel + arrow keys ARE the flights, so only touch counts.)
+(SCROLL_MODE === 'paged' ? ['touchstart'] : ['wheel', 'touchstart', 'keydown']).forEach((type) => {
   window.addEventListener(type, () => { flyingTo = null; }, { capture: true, passive: true });
 });
 
@@ -1287,6 +1291,108 @@ function onScroll() {
   if (scrollHint) scrollHint.classList.toggle('hidden', window.scrollY > 40);
 }
 window.addEventListener('scroll', onScroll, { passive: true });
+
+// --- Paged scrolling (SCROLL_MODE = 'paged') -----------------------------------
+// The wheel/trackpad doesn't scroll the page directly: a gesture moves exactly one
+// stop, with a smooth glide. Trackpad "momentum" after a swipe is ignored, so one
+// swipe never skips two stops. Scrolling inside a window with its own scrollbar
+// (a long text box) still scrolls that window first.
+const PAGED = {
+  threshold: 30,   // how much wheel movement counts as "go to the next stop"
+  quietMs: 180,    // after landing, the wheel must rest this long before the next move…
+  maxLockMs: 1100, // …or this long has passed since the move started
+};
+
+if (!MOBILE && SCROLL_MODE === 'paged') {
+  let pending = 0;     // wheel movement collected so far
+  let lockedAt = 0;    // when the current glide started (0 = not gliding)
+  let lockTarget = 0;  // where that glide is headed
+  let lastWheel = 0;
+  let prevAbs = 0;     // size of the previous wheel event (to tell momentum from a new swipe)
+
+  const currentIndex = () => {
+    let best = 0;
+    zones.forEach((z, i) => {
+      if (Math.abs(z.start - window.scrollY) < Math.abs(zones[best].start - window.scrollY)) best = i;
+    });
+    return best;
+  };
+
+  const go = (dir) => {
+    const i = Math.min(zones.length - 1, Math.max(0, currentIndex() + dir));
+    if (Math.abs(zones[i].start - window.scrollY) < 2) return;
+    lockedAt = performance.now();
+    lockTarget = zones[i].start;
+    scrollToZone(zones[i].name);
+  };
+
+  // can this element (or a parent window body) scroll further in this direction itself?
+  const innerScroller = (target, dy) => {
+    for (let el = target; el && el !== document.body; el = el.parentElement) {
+      if (!(el instanceof HTMLElement)) continue;
+      const oy = getComputedStyle(el).overflowY;
+      if ((oy === 'auto' || oy === 'scroll') && el.scrollHeight > el.clientHeight + 1) {
+        if (dy > 0 && el.scrollTop + el.clientHeight < el.scrollHeight - 1) return true;
+        if (dy < 0 && el.scrollTop > 0) return true;
+      }
+    }
+    return false;
+  };
+
+  window.addEventListener('wheel', (e) => {
+    if (e.ctrlKey) return; // pinch-zoom
+    const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+    if (innerScroller(e.target, dy)) return;
+    e.preventDefault();
+
+    const now = performance.now();
+    const quiet = now - lastWheel;
+    const abs = Math.abs(dy);
+    lastWheel = now;
+    if (lockedAt) {
+      const arrived = Math.abs(window.scrollY - lockTarget) < 2;
+      const stillGliding = !arrived && now - lockedAt < PAGED.maxLockMs;
+      // landed: a pause, or a clearly bigger push (a fresh swipe, not leftover momentum), unlocks
+      const freshSwipe = abs > prevAbs * 1.5 && abs > 10;
+      if (stillGliding || (quiet <= PAGED.quietMs && !freshSwipe)) {
+        prevAbs = abs;
+        return;
+      }
+      lockedAt = 0;
+      pending = 0;
+    }
+    prevAbs = abs;
+    if (quiet > PAGED.quietMs) pending = 0;
+    pending += dy;
+    if (Math.abs(pending) >= PAGED.threshold) {
+      const dir = Math.sign(pending);
+      pending = 0;
+      go(dir);
+    }
+  }, { passive: false });
+
+  // keyboard: arrows / Page Up / Page Down / space (not while typing or using a control)
+  window.addEventListener('keydown', (e) => {
+    if (e.target.closest?.('input, textarea, select, [contenteditable]')) return;
+    const down = ['ArrowDown', 'PageDown'].includes(e.key) || (e.key === ' ' && !e.shiftKey);
+    const up = ['ArrowUp', 'PageUp'].includes(e.key) || (e.key === ' ' && e.shiftKey);
+    if (!down && !up) return;
+    if (e.key === ' ' && e.target.closest?.('button, a, [role="button"], [role="slider"]')) return;
+    e.preventDefault();
+    go(down ? 1 : -1);
+  });
+
+  // dragging the scrollbar (or anything else) and letting go between stops → settle on the nearest
+  let settleTimer = null;
+  window.addEventListener('scroll', () => {
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(() => {
+      if (flyingTo) return;
+      const z = zones[currentIndex()];
+      if (Math.abs(z.start - window.scrollY) > 2) scrollToZone(z.name);
+    }, 220);
+  }, { passive: true });
+}
 
 // --- Resize ------------------------------------------------------------------
 window.addEventListener('resize', () => {
