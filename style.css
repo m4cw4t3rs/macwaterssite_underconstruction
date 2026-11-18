@@ -629,7 +629,7 @@ button.win-btn:active {
      top: 31%), so the two never overlap — raise the px number to push icons lower */
   top: calc(31% + 250px);
   transform: translateX(-50%);
-  width: min(94vw, 680px);   /* fits exactly 4 icons per row (each icon ≈ 140px + 32px gap); the rest wrap below, centered */
+  width: min(94vw, 860px);   /* fits exactly 5 icons per row (each icon ≈ 140px + 32px gap); the rest wrap below, centered */
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -740,6 +740,36 @@ button.win-btn:active {
   50% { opacity: 0; }
 }
 
+/* work.txt hover previews are short — left-aligned, so no stretched gaps */
+#work-blurb .blurb-text {
+  text-align: left;
+}
+
+/* the "[page under construction, coming soon]" line in a hidden project's preview */
+.soon-note {
+  display: inline-block;
+  margin-top: 0.4em;
+  color: #6b6b6b;
+}
+
+/* "coming soon" icons (projects in HIDDEN_STOPS) look like the others; the note shows on hover */
+.desk-icon.coming-soon {
+  cursor: help;
+}
+
+/* clicked a "coming soon" icon: a quick "nope" wiggle */
+.desk-icon.nope .desk-thumb {
+  animation: nope-wiggle 0.4s ease-in-out;
+}
+
+@keyframes nope-wiggle {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-6px) rotate(-4deg); }
+  40%      { transform: translateX(5px) rotate(3deg); }
+  60%      { transform: translateX(-4px) rotate(-2deg); }
+  80%      { transform: translateX(2px); }
+}
+
 /* the icons also sink away when you leave the stop */
 .station-panel.receded .desk-icon {
   transform: scale(0.55);
@@ -806,6 +836,15 @@ button.win-btn:active {
   cursor: pointer;
 }
 
+/* skip-through videos keep a fixed shape, so the window doesn't shrink for a
+   moment while the next section loads (all TikTokBox sections are 16:9) */
+.win-body.media video[data-cycle] {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
 .sound-badge {
   margin-right: 4px;
   font-size: 12px;
@@ -840,6 +879,32 @@ body.sound-ok .sound-hint .hint-hover { display: inline; }
 
 .win-window.sound-on .sound-hint {
   opacity: 0;
+}
+
+/* Two-window pages (one .txt + one .mp4): the pair sits centered with a gap.
+   Each page sets --txt-w / --vid-w (window widths) on its <section class="pair">;
+   --gap is the space between them (50px on big screens, never under 20px). */
+.stage.pair {
+  --gap: clamp(20px, 3.5vw, 50px);
+  --pair-left: calc(50% - (var(--txt-w) + var(--gap) + var(--vid-w)) / 2);
+}
+.stage.pair > .pair-txt {
+  left: var(--pair-left);
+  width: var(--txt-w);
+}
+.stage.pair > .pair-vid {
+  left: calc(var(--pair-left) + var(--txt-w) + var(--gap));
+  width: var(--vid-w);
+}
+
+/* the skip-through video (TikTokBox) keeps its "click to skip" tag showing */
+.win-window.sound-on .sound-hint.cycle-hint {
+  opacity: 0.85;
+}
+
+.cycle-count {
+  margin-left: 6px;
+  opacity: 0.75;
 }
 
 /* =========================================================================
@@ -1291,4 +1356,200 @@ body.sound-ok .sound-hint .hint-hover { display: inline; }
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* =========================================================================
+   PHONES — everything below only applies when main.js puts the "mobile"
+   class on the page (narrow screens, or phones turned sideways), so the
+   desktop site is unaffected. The page becomes one long column:
+   small castle header → about → work icons → each project.
+   ========================================================================= */
+html.mobile body {
+  overflow-x: clip; /* tilted photos never make the page scroll sideways */
+}
+
+/* gone on phones: nav cubes, the taskbar's window buttons, "scroll" hint, window buttons */
+html.mobile #nav-labels,
+html.mobile #taskbar .tb-tasks,
+html.mobile #scroll-hint,
+html.mobile .win-titlebar .win-btn,
+html.mobile .win-titlebar .win-buttons,
+html.mobile .size-grip,
+html.mobile .sound-hint,
+html.mobile .sound-badge {
+  display: none !important;
+}
+
+/* the castle + MACWATERS ring: a short header at the top that scrolls away */
+html.mobile #mobile-hero {
+  position: relative;
+  z-index: 2;
+  height: 30vh;
+  height: 30svh; /* HEADER HEIGHT on phones (svh = doesn't jump when the address bar hides) */
+}
+
+html.mobile #three-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* each section: a plain column of windows, one under another */
+html.mobile body .station-panel {
+  position: relative;
+  inset: auto;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  width: auto;
+  max-width: 540px;
+  height: auto;
+  margin: 0 auto 64px; /* space between sections */
+  padding: 0 16px;
+  box-sizing: border-box;
+  transform: none;
+  visibility: visible;
+  pointer-events: auto;
+  transition: none;
+  scroll-margin-top: 16px;
+}
+
+html.mobile body .station-panel > * {
+  position: relative !important;
+  inset: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0;
+  box-sizing: border-box;
+  transform: none !important;
+  transition: none !important;
+  filter: none !important;
+  opacity: 1 !important;
+  pointer-events: auto;
+  z-index: auto;
+}
+
+/* no inner scrollbars — the page itself scrolls */
+html.mobile .stage .win-body:not(.media),
+html.mobile .about-window .win-body {
+  max-height: none !important;
+  overflow: visible;
+  padding-bottom: 16px;
+}
+
+/* ABOUT: about_mac.txt → the rose (its own 3D view) → upcoming.txt → photo */
+html.mobile #rose-slot {
+  height: min(80vw, 340px);
+}
+
+html.mobile #rose-slot canvas {
+  display: block;
+}
+
+html.mobile body .about-photo {
+  width: min(55%, 220px) !important;
+  align-self: center;
+  rotate: -4deg;
+}
+
+/* PROJECT PAGES: videos / players first, then the description, then photos.
+   (lower number = higher up; same number = order in index.html) */
+html.mobile .stage > .float-img:not(.photo)            { order: 0; } /* a project logo */
+html.mobile .stage > .win-window:has(.win-body.player)  { order: 1; } /* playlist.exe */
+html.mobile .stage > .win-window:has(.win-body.media)   { order: 2; } /* videos, scores */
+html.mobile .stage > .win-window                        { order: 3; } /* descriptions */
+html.mobile .stage > .float-img.photo                   { order: 4; } /* snapshots */
+html.mobile #work-panel > *                             { order: 0; } /* work: keep work.txt above the icons */
+
+html.mobile body .stage > .float-img {
+  width: min(80%, 340px) !important;
+  align-self: center;
+}
+
+html.mobile body .stage > .float-img.photo {
+  width: min(70%, 280px) !important;
+}
+
+/* WORK: the project icons in a tidy grid */
+html.mobile .desktop {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 18px 8px;
+  justify-items: center;
+}
+
+html.mobile .desk-icon {
+  width: auto;
+  max-width: 120px;
+  left: 0 !important;
+  top: 0 !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html.mobile .desk-thumb {
+  width: 84px;
+  height: 84px;
+}
+
+/* "◀ back to desktop": floats at the bottom once you're in the projects */
+html.mobile .back-btn {
+  bottom: calc(46px + env(safe-area-inset-bottom, 0px)); /* just above the taskbar */
+  padding: 10px 18px;
+  font-size: 14px;
+}
+
+/* TASKBAR on phones: just start + clock (window buttons hidden above).
+   The tray slides to the right edge, and the bar clears the iPhone home bar. */
+html.mobile #taskbar {
+  justify-content: space-between;
+  height: calc(34px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html.mobile body {
+  padding-bottom: calc(50px + env(safe-area-inset-bottom, 0px)); /* last section isn't hidden behind the taskbar */
+}
+
+/* START MENU on phones: bigger tap targets, never taller than the screen, and the
+   project list opens underneath "work" (tap ▸) instead of off the side of the screen */
+html.mobile #start-menu {
+  bottom: calc(34px + env(safe-area-inset-bottom, 0px));
+  max-height: calc(100svh - 60px);
+  overflow-y: auto;
+}
+
+html.mobile #start-menu button {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-size: 15px;
+}
+
+html.mobile .sm-has-sub {
+  flex-wrap: wrap;
+}
+
+html.mobile .sm-submenu {
+  position: static;
+  flex-basis: 100%;
+  min-width: 0;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+html.mobile #start-menu .sm-submenu button {
+  padding-left: 30px; /* indented under "work" */
+}
+
+/* on phones the list opens only by tapping ▸ (not a "sticky hover" after a tap) */
+html.mobile .sm-has-sub:hover > .sm-submenu,
+html.mobile .sm-has-sub:focus-within > .sm-submenu {
+  display: none;
+}
+
+html.mobile .sm-has-sub.open > .sm-submenu {
+  display: block;
 }

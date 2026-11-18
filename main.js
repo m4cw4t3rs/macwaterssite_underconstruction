@@ -15,7 +15,19 @@ import { typeIn, cancelTypeIn } from './typewriter.js';
 import { initPlayers } from './player.js';
 import { initScoreBooks } from './scorebook.js';
 
-initDraggables(); // windows + pngs marked data-drag in index.html
+// --- Phone mode ---------------------------------------------------------------
+// On phones the site becomes one long page: a small castle header at the top,
+// then every section stacked underneath (no flying camera, no nav cubes, no
+// taskbar, no dragging). Everything for phones is marked "MOBILE" below, and
+// the phone-only styles live under "html.mobile" at the end of style.css,
+// so the desktop site is untouched.
+const MOBILE_QUERY = window.matchMedia('(max-width: 700px), (pointer: coarse) and (max-height: 500px)');
+const MOBILE = MOBILE_QUERY.matches;
+if (MOBILE) document.documentElement.classList.add('mobile');
+// crossing between phone and desktop size (e.g. resizing a browser window) reloads into the other mode
+MOBILE_QUERY.addEventListener('change', () => location.reload());
+
+if (!MOBILE) initDraggables(); // windows + pngs marked data-drag in index.html
 initMedia();      // videos: play per stop, hover-for-sound groups
 initPlayers();    // playlist.exe music player(s)
 initScoreBooks(); // scores.book page-turning score viewer(s)
@@ -56,7 +68,29 @@ renderer.domElement.id = 'three-canvas';
 const gradientBg = document.createElement('div');
 gradientBg.id = 'gradient-bg';
 document.body.appendChild(gradientBg);
-document.body.appendChild(renderer.domElement);
+
+// MOBILE: the 3D canvas lives in a short header box at the top of the page
+// (its height is set in style.css: html.mobile #mobile-hero) and scrolls away.
+const mobileHero = MOBILE ? document.createElement('div') : null;
+if (MOBILE) {
+  mobileHero.id = 'mobile-hero';
+  document.body.prepend(mobileHero);
+  mobileHero.appendChild(renderer.domElement);
+} else {
+  document.body.appendChild(renderer.domElement);
+}
+
+// The size the main 3D view is drawn at: the whole window, or the phone header box.
+function viewSize() {
+  if (MOBILE) return { w: mobileHero.clientWidth || window.innerWidth, h: mobileHero.clientHeight || 1 };
+  return { w: window.innerWidth, h: window.innerHeight };
+}
+if (MOBILE) {
+  const { w, h } = viewSize();
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
 
 function setGradientColors(colors, stops) {
   const stopsString = colors.map((color, i) => `${color} ${stops[i]}`).join(', ');
@@ -75,7 +109,7 @@ setGradientColors(
 // HIDE A PROJECT: put its name here and it disappears everywhere — desktop icon,
 // Start-menu entry, and its stop in the scroll (the other stops close up).
 // Its content stays in index.html; delete the name here to bring it back.
-const HIDDEN_STOPS = ['filmscoring'];
+const HIDDEN_STOPS = ['filmscoring', 'bookofhours'];
 
 const ALL_ZONES = [
   { name: 'home',          start: 0,   hold: 0, cameraZ: 50 },
@@ -84,12 +118,13 @@ const ALL_ZONES = [
   // --- the projects ---
   { name: 'dreamvisions',  start: 3.6, hold: 0, cameraZ: 350 },
   { name: 'meditations',   start: 4.8, hold: 0, cameraZ: 450 },
-  { name: 'bookofhours',   start: 6.0, hold: 0, cameraZ: 550 },
-  { name: 'tiktokbox',     start: 7.2, hold: 0, cameraZ: 650 },
-  { name: 'violarecital',  start: 8.4, hold: 0, cameraZ: 750 },
-  { name: 'shokwii',       start: 9.6, hold: 0, cameraZ: 850 },
-  { name: 'filmscoring',   start: 10.8, hold: 0, cameraZ: 950 },
-  { name: 'composition',   start: 12.0, hold: 0, cameraZ: 1050 },
+  { name: 'live',          start: 6.0, hold: 0, cameraZ: 550 },  // LIVE.exe — solo sets
+  { name: 'bookofhours',   start: 7.2, hold: 0, cameraZ: 650 },
+  { name: 'tiktokbox',     start: 8.4, hold: 0, cameraZ: 750 },
+  { name: 'violarecital',  start: 9.6, hold: 0, cameraZ: 850 },
+  { name: 'shokwii',       start: 10.8, hold: 0, cameraZ: 950 },
+  { name: 'filmscoring',   start: 12.0, hold: 0, cameraZ: 1050 },
+  { name: 'composition',   start: 13.2, hold: 0, cameraZ: 1150 },
 ];
 
 // The stops actually in use: hidden ones removed, the rest re-spaced evenly
@@ -99,10 +134,17 @@ const ZONE_DEFS = ALL_ZONES
   .filter((z) => !HIDDEN_STOPS.includes(z.name))
   .map((z, i) => ({ ...z, start: i * STOP_SPACING.start, cameraZ: ALL_ZONES[0].cameraZ + i * STOP_SPACING.cameraZ }));
 
-// Hide everything that points to a hidden stop: desktop icons, Start-menu items, its windows.
+// Hidden stops: their Start-menu items and windows disappear, but their desktop
+// icons stay as "coming soon" (🚧 badge, a note in the hover preview, no click-through).
+const COMING_SOON_NOTE = '[page under construction, coming soon]';
 HIDDEN_STOPS.forEach((name) => {
   document.querySelectorAll(`[data-nav="${name}"]`).forEach((el) => {
-    (el.closest('li') || el).hidden = true;
+    if (el.classList.contains('desk-icon')) {
+      el.classList.add('coming-soon');
+      el.setAttribute('aria-disabled', 'true');
+    } else {
+      (el.closest('li') || el).hidden = true;
+    }
   });
   const panel = document.getElementById(`${name}-panel`);
   if (panel) panel.hidden = true;
@@ -122,6 +164,7 @@ let zones = [];
 function buildZones() {
   const h = window.innerHeight;
   zones = ZONE_DEFS.map((z) => ({ ...z, start: z.start * h, hold: z.hold * h }));
+  if (MOBILE) return; // phones: the stacked sections give the page its length, no snapping
 
   // Make the page exactly tall enough to reach the last station.
   const last = ZONE_DEFS[ZONE_DEFS.length - 1];
@@ -145,6 +188,7 @@ buildZones();
 let targetCameraZ = camera.position.z;
 
 function updateCameraTarget() {
+  if (MOBILE) return; // phones: the camera stays at the castle
   const scrollY = window.scrollY;
   for (let i = 0; i < zones.length; i++) {
     const z = zones[i];
@@ -169,6 +213,19 @@ let flightTimer = null;
 
 function scrollToZone(name) {
   const target = ZONE_ALIASES[name] || name;
+  if (MOBILE) {
+    // phones: just scroll the page to that section (and remember it, so Back returns here)
+    const el = target === 'home' ? null : document.getElementById(`${target}-panel`);
+    if (target !== 'home' && !el) return;
+    if (!fromHistory) {
+      const url = target === 'home' ? location.pathname + location.search : `#${target}`;
+      history.pushState({ stop: target }, '', url);
+    }
+    fromHistory = false;
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    else window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
   const z = zones.find((zone) => zone.name === target);
   if (!z) return;
   flyingTo = z;
@@ -219,6 +276,7 @@ function stopFromHash() {
 
 // Called every frame: once you've settled on a new stop, record it.
 function updateHistory() {
+  if (MOBILE) return;   // phones handle this in scrollToZone
   if (flyingTo) return; // wait until a flight lands
   const here = zones.find((z) =>
     Math.abs(window.scrollY - z.start) < 2 && Math.abs(camera.position.z - z.cameraZ) < 1);
@@ -248,6 +306,13 @@ document.addEventListener('click', (e) => {
 function jumpToStopFromAddress() {
   const name = stopFromHash();
   if (name === 'home') return;
+  if (MOBILE) {
+    // wait for images to settle the page's height, then jump to that section
+    const go = () => document.getElementById(`${name}-panel`)?.scrollIntoView({ block: 'start' });
+    if (document.readyState === 'complete') go();
+    else window.addEventListener('load', go, { once: true });
+    return;
+  }
   const z = zones.find((zone) => zone.name === name);
   window.scrollTo({ top: z.start, behavior: 'instant' });
   camera.position.z = z.cameraZ;
@@ -267,7 +332,7 @@ function scatterIcons() {
     icon.style.top = `${rand(sy)}px`;
   });
 }
-scatterIcons();
+if (!MOBILE) scatterIcons(); // phones: icons sit in a tidy grid
 
 // --- work.txt previews ---------------------------------------------------------
 // Hovering (or tabbing to) a desktop icon swaps work.txt to that project's title
@@ -305,6 +370,9 @@ function showBlurb(icon) {
   // The description: words wrapped in *asterisks* become italic.
   blurbTextEl = workBlurb.querySelector('.blurb-text');
   blurbTextEl.innerHTML = blurbToHtml(text);
+  if (icon.classList.contains('coming-soon')) {
+    blurbTextEl.insertAdjacentHTML('beforeend', `<br><span class="soon-note">${COMING_SOON_NOTE}</span>`);
+  }
   if (BLURB_TYPE_SPEED) typeIn(blurbTextEl, 0); // types it out, italics and all (typewriter.js)
 }
 
@@ -335,17 +403,31 @@ document.querySelectorAll('.desk-icon').forEach((icon) => {
 });
 
 // Desktop icons on the work stop: click (or Enter) flies to that project.
+// A "coming soon" icon (hidden project) just wiggles and shows its preview instead.
+function openIcon(icon) {
+  if (icon.classList.contains('coming-soon')) {
+    showBlurb(icon); // (on phones there's no hover, so tapping shows the note)
+    icon.classList.remove('nope');
+    void icon.offsetWidth; // restart the wiggle if tapped again
+    icon.classList.add('nope');
+    return;
+  }
+  scrollToZone(icon.dataset.nav);
+}
+
 document.querySelectorAll('.desk-icon[data-nav]').forEach((icon) => {
-  icon.addEventListener('click', () => scrollToZone(icon.dataset.nav));
+  icon.addEventListener('click', () => openIcon(icon));
+  icon.addEventListener('animationend', () => icon.classList.remove('nope'));
   icon.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      scrollToZone(icon.dataset.nav);
+      openIcon(icon);
     }
   });
 });
 
 // Start menu links: a stop name, or "contact" for email.
+// (On phones the taskbar keeps only the start button + clock; the window buttons are hidden in style.css.)
 initTaskbar({
   onNavigate: (name) => {
     if (name === 'contact') window.location.href = `mailto:${CONTACT_EMAIL}`;
@@ -494,7 +576,7 @@ gltfLoader.load(asset('models/macwaters_text.glb'), (gltf) => {
 // The title's letters form a tilted, spinning ring, so the part nearest the
 // camera looks biggest and sits highest on screen. Walk around the ring and find
 // the height that keeps every point of its top edge below TITLE_HEADER.top.
-function titleHeaderY(scale) {
+function titleHeaderY(scale, top = headerTop()) {
   if (!titleBox) return 16.5;
   const tanHalf = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
   const tilt = titleMesh.rotation.x;
@@ -509,20 +591,36 @@ function titleHeaderY(scale) {
     const yTilted = yTop * Math.cos(tilt) - z * Math.sin(tilt);
     const zTilted = yTop * Math.sin(tilt) + z * Math.cos(tilt);
     const depth = TITLE_DISTANCE - zTilted;
-    best = Math.min(best, TITLE_HEADER.top * tanHalf * depth - yTilted);
+    best = Math.min(best, top * tanHalf * depth - yTilted);
   }
   return best;
+}
+
+// MOBILE: the header box is short and wide, so the title is sized to its width.
+const TITLE_MOBILE = {
+  fill: 0.8,  // the ring's width as a fraction of the screen width
+  top: 0.82,  // where its top edge sits (1 = top of the header box)
+};
+function headerScale() {
+  if (!MOBILE || !titleBox) return TITLE_HEADER.scale;
+  const halfW = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * TITLE_DISTANCE * camera.aspect;
+  return (2 * halfW * TITLE_MOBILE.fill) / (titleBox.max.x - titleBox.min.x);
+}
+function headerTop() {
+  return MOBILE ? TITLE_MOBILE.top : TITLE_HEADER.top;
 }
 
 // As you start scrolling, the title rises and the castle sinks back.
 // It happens over the scroll from the castle to the next stop.
 function updateIntroMotion() {
   const introScroll = zones[1] ? zones[1].start : window.innerHeight;
-  const progress = Math.min(window.scrollY / introScroll, 1);
+  // phones: always in the small "header" arrangement (castle inside the ring)
+  const progress = MOBILE ? 1 : Math.min(window.scrollY / introScroll, 1);
   if (titleMesh && TITLE_AS_HEADER) {
-    const headerY = titleHeaderY(TITLE_HEADER.scale);
+    const s = headerScale();
+    const headerY = titleHeaderY(s);
     titleMesh.position.y = THREE.MathUtils.lerp(16.5, headerY, progress);
-    titleMesh.scale.setScalar(THREE.MathUtils.lerp(0.4, TITLE_HEADER.scale, progress));
+    titleMesh.scale.setScalar(THREE.MathUtils.lerp(0.4, s, progress));
   } else if (titleMesh) {
     titleMesh.position.z = THREE.MathUtils.lerp(0, -20, progress);
     titleMesh.position.y = THREE.MathUtils.lerp(16.5, 30, progress);
@@ -541,7 +639,7 @@ const CASTLE_HEADER = {
 
 // Where the MACWATERS ring ends up as a header: its middle and its width.
 function titleRingHeader() {
-  const s = TITLE_HEADER.scale;
+  const s = headerScale();
   if (!titleBox || !titleMesh) return { cy: 24, width: 45 };
   return {
     cy: titleHeaderY(s) + ((titleBox.min.y + titleBox.max.y) / 2) * s,
@@ -556,7 +654,7 @@ function updateCastle() {
   if (!castleModel || !castleBox) return;
   const homeZ = ZONE_DEFS[0].cameraZ;
   const nextZ = ZONE_DEFS[1].cameraZ;
-  const p = THREE.MathUtils.clamp((camera.position.z - homeZ) / (nextZ - homeZ), 0, 1);
+  const p = MOBILE ? 1 : THREE.MathUtils.clamp((camera.position.z - homeZ) / (nextZ - homeZ), 0, 1);
   const eased = THREE.MathUtils.smoothstep(p, 0, 1);
 
   // Size it to fit inside the ring, but never taller than the screen allows.
@@ -593,7 +691,40 @@ roseGroup.add(roseSpin);
 roseSpin.add(rosePivot);
 const roseBase = new THREE.Vector3();
 let roseNativeHeight = 1;
-scene.add(roseGroup);
+
+// MOBILE: the rose gets its own little 3D view, placed in the about section
+// between about_mac.txt and upcoming.txt (the slot is made here, sized in style.css).
+let roseView = null; // { slot, renderer, scene, camera, onScreen }
+if (MOBILE) {
+  const slot = document.createElement('div');
+  slot.id = 'rose-slot';
+  slot.setAttribute('aria-label', 'a rose with eyes (tap it)');
+  document.querySelector('#about-panel .about-window')?.after(slot);
+  const roseRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: window.devicePixelRatio < 2 });
+  roseRenderer.setPixelRatio(PIXEL_RATIO);
+  roseRenderer.setClearColor(0x000000, 0);
+  slot.appendChild(roseRenderer.domElement);
+  const roseScene = new THREE.Scene();
+  addLightsAndFog(roseScene); // (defined further down; function declarations work before their line)
+  const roseCamera = new THREE.PerspectiveCamera(75, 1, 0.5, 200);
+  roseCamera.position.set(0, 0, ROSE_DISTANCE);
+  roseScene.add(roseGroup);
+  roseView = { slot, renderer: roseRenderer, scene: roseScene, camera: roseCamera, onScreen: false };
+  new IntersectionObserver(([entry]) => { roseView.onScreen = entry.isIntersecting; }).observe(slot);
+  roseRenderer.domElement.addEventListener('click', () => startSwapSpin(clock.getElapsedTime()));
+} else {
+  scene.add(roseGroup);
+}
+
+function sizeRoseView() {
+  if (!roseView) return;
+  const w = roseView.slot.clientWidth || 1;
+  const h = roseView.slot.clientHeight || 1;
+  roseView.renderer.setSize(w, h);
+  roseView.camera.aspect = w / h;
+  roseView.camera.updateProjectionMatrix();
+}
+sizeRoseView();
 
 function applyRoseRotation() {
   const d = THREE.MathUtils.degToRad;
@@ -745,6 +876,13 @@ function roseAt(p) {
 const ROSE_SPOT = { x: 0.36, y: -0.22 };
 
 function layoutAbout() {
+  if (roseView) {
+    // phones: centered in its own view, filling most of its height
+    const halfH = Math.tan(THREE.MathUtils.degToRad(roseView.camera.fov / 2)) * ROSE_DISTANCE;
+    roseBase.set(0, 0, 0);
+    roseScale = (halfH * 2 * 0.8) / roseNativeHeight;
+    return;
+  }
   const halfH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * ROSE_DISTANCE;
   const halfW = halfH * camera.aspect;
   const portrait = camera.aspect < 1;
@@ -809,6 +947,16 @@ function setPanelState(panel, state) {
 }
 
 function updateAbout(t) {
+  if (roseView) {
+    // phones: always showing; gently looks around on its own (there's no cursor to follow)
+    roseGroup.visible = true;
+    roseGroup.scale.setScalar(roseScale);
+    roseGroup.position.set(0, Math.sin(t * 1.4) * 0.6, 0);
+    roseGroup.rotation.x = Math.sin(t * 0.5) * 0.15;
+    roseGroup.rotation.y = Math.sin(t * 0.35) * 0.5;
+    updateSwapSpin(t);
+    return;
+  }
   // The rose rides just in front of the camera: it grows in as you arrive at
   // the about stop and shrinks away as you leave (in either direction).
   const fromStop = Math.abs(camera.position.z - ABOUT_Z);
@@ -857,7 +1005,25 @@ backButton?.addEventListener('click', (e) => {
   scrollToZone('work');
 });
 
+// MOBILE: every section is simply always "visible" (no flying in, no typing out),
+// and "back to desktop" shows once you've scrolled down into the projects.
+const firstProjectPanel = document.getElementById(`${PROJECT_STOPS[0]}-panel`);
+if (MOBILE) {
+  stationPanels.forEach(({ el }) => {
+    el.classList.add('visible');
+    el.dataset.state = 'visible';
+  });
+}
+function updateMobileBackButton() {
+  if (!backButton || !firstProjectPanel) return;
+  const onProject = firstProjectPanel.getBoundingClientRect().top < window.innerHeight * 0.5;
+  if (backButton.classList.contains('visible') === onProject) return;
+  backButton.classList.toggle('visible', onProject);
+  backButton.tabIndex = onProject ? 0 : -1;
+}
+
 function updateStations() {
+  if (MOBILE) return updateMobileBackButton();
   const camZ = camera.position.z;
   let onProject = false;
   for (const { name, cameraZ, el } of stationPanels) {
@@ -1100,6 +1266,7 @@ document.documentElement.addEventListener('mouseleave', () => {
 });
 
 window.addEventListener('click', (e) => {
+  if (MOBILE) return; // phones: no nav cubes (the rose has its own tap handler)
   // Ignore the click that ends a castle drag.
   if (didDrag) {
     didDrag = false;
@@ -1123,8 +1290,8 @@ window.addEventListener('scroll', onScroll, { passive: true });
 
 // --- Resize ------------------------------------------------------------------
 window.addEventListener('resize', () => {
-  const w = window.innerWidth;
-  const h = window.innerHeight;
+  const { w, h } = viewSize();
+  sizeRoseView();
   renderer.setSize(w, h);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
@@ -1138,8 +1305,27 @@ window.addEventListener('resize', () => {
 const growTarget = new THREE.Vector3();
 const clock = new THREE.Clock();
 
+// MOBILE: only draw each 3D view while it's on screen (saves battery).
+let heroOnScreen = true;
+if (MOBILE) {
+  new IntersectionObserver(([entry]) => { heroOnScreen = entry.isIntersecting; }).observe(mobileHero);
+}
+
+function animateMobile(t) {
+  if (titleMesh) titleMesh.rotation.y -= 0.001;
+  updateCastle();
+  updateAbout(t);
+  updateStations();
+  if (heroOnScreen) {
+    renderer.clear();
+    renderer.render(scene, camera);
+  }
+  if (roseView?.onScreen) roseView.renderer.render(roseView.scene, roseView.camera);
+}
+
 function animate() {
   const t = clock.getElapsedTime();
+  if (MOBILE) return animateMobile(t);
 
   // Camera eases toward its scroll target.
   camera.position.z += (targetCameraZ - camera.position.z) * 0.08;

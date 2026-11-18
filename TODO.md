@@ -19,6 +19,7 @@ Last checked against the files: Nov 18
 - [x] **DreamVisions+** — `[ongoing media project — a few sentences about it]` + details line `[WALLED_GARDEN installation · live performance · year]` (the year is already in the heading — you can drop it from this line)
 - [x] **GUIDED_MEDITATIONS** — `[description]` + `[credits]`
 - [ ] **Book of Hours** — `[album description]`
+- [ ] **LIVE.exe** — hover blurb, `[year]`, description, works line (set title, venue, city)
 - [x] **TikTokBox** — `[description]`
 - [x] **soloviolarecital** — `[description — program, venue, date]`
 - [x] **SHOKWII** — `[description]`
@@ -54,6 +55,7 @@ Claude to make web versions. Anything long → Vimeo/YouTube/Bandcamp, and paste
 - [ ] **GUIDED_MEDITATIONS** — upload the full pieces to Vimeo → paste the link (search `[watch the full pieces → Vimeo link]`, put the URL in `href="#"`)
 - [ ] **Book of Hours** — album art (square, ~1200×1200) + pre-save link now → Bandcamp at release
 - [ ] **TikTokBox** — vertical video excerpt(s)
+- [ ] **LIVE.exe** — thumbnail `public/media/thumbs/live.png` + the set video (drop it in `assets_src/media-originals/live/` with timestamps)
 - [ ] **soloviolarecital** — recital video (excerpt and/or Vimeo link), photos/program
 - [ ] **SHOKWII** — the film (Vimeo/YouTube link or short excerpt) + stills
 - [ ] **Film Scoring** — a 60–90 s scoring reel (Vimeo or short mp4)
@@ -76,6 +78,7 @@ Claude to make web versions. Anything long → Vimeo/YouTube/Bandcamp, and paste
 - [ ] **Cleanup** — remove leftover placeholders, delete `assets_src/style.before-restore.css`, stop tracking `.DS_Store` files
 - [ ] **Decide:** keep or remove the 🚧 icon in the taskbar tray and the "scroll ↓" hint at launch
 - [ ] **Decide:** launch with every project, or hide the unfinished ones until they're ready
+  - Book of Hours is **hidden** for launch (album still in progress) — remove `'bookofhours'` from `HIDDEN_STOPS` when it's ready
   - Film Scoring is **hidden** for launch (`HIDDEN_STOPS` in `main.js`) — remove `'filmscoring'` from that list once the films are out
 
 ---
