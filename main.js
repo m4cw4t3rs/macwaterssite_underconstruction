@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-import { initDraggables, bringToFront } from './drag.js';
+import { initDraggables, initSpringDrag, bringToFront } from './drag.js';
 import { initTaskbar } from './taskbar.js';
 import { initMedia } from './media.js';
 import { typeIn, cancelTypeIn } from './typewriter.js';
@@ -19,7 +19,8 @@ import { initScoreBooks } from './scorebook.js';
 // On phones the site becomes one long page: a landing page with the castle
 // (spin it with a finger), which shrinks into a small header as you scroll, then
 // every section stacked underneath, its windows flying in as they come on screen
-// (no flying camera, no nav cubes, no taskbar window buttons, no dragging). Everything for phones is marked "MOBILE" below, and
+// (no flying camera, no nav cubes, no taskbar window buttons; windows can be
+// flung by their title bars and spring back). Everything for phones is marked "MOBILE" below, and
 // the phone-only styles live under "html.mobile" at the end of style.css,
 // so the desktop site is untouched.
 const MOBILE_QUERY = window.matchMedia('(max-width: 700px), (pointer: coarse) and (max-height: 500px)');
@@ -29,6 +30,7 @@ if (MOBILE) document.documentElement.classList.add('mobile');
 MOBILE_QUERY.addEventListener('change', () => location.reload());
 
 if (!MOBILE) initDraggables(); // windows + pngs marked data-drag in index.html
+else initSpringDrag();         // phones: fling windows by the title bar, they spring back
 initMedia();      // videos: play per stop, hover-for-sound groups
 initPlayers();    // playlist.exe music player(s)
 initScoreBooks(); // scores.book page-turning score viewer(s)
@@ -52,7 +54,7 @@ camera.position.z = 50;
 // Retina screens are sharp enough without extra edge-smoothing, and drawing at
 // 1.5× instead of 2× is about half the pixels — a big memory/battery saving.
 const PIXEL_RATIO = Math.min(window.devicePixelRatio, 1.5);
-const MAX_TEXTURE_SIZE = 1024; // shrink bigger model textures to this when they load
+const MAX_TEXTURE_SIZE = MOBILE ? 512 : 1024; // shrink bigger model textures to this when they load (phones: smaller, they're tiny on screen + phones have less memory)
 
 const renderer = new THREE.WebGLRenderer({
   alpha: true,
@@ -357,6 +359,12 @@ if (!MOBILE) scatterIcons(); // phones: icons sit in a tidy grid
 // Moving off the icons brings back the default text.
 const BLURB_TYPE_SPEED = 350; // 0 = no typing effect, just show it (typing speed itself is TYPE.speed in typewriter.js)
 const workBlurb = document.getElementById('work-blurb');
+// phones: no hover, so the instructions say "tap" (edit the phone wording here)
+const MOBILE_ICON_HINT = 'tap an icon for a preview; tap it again to open.';
+if (MOBILE && workBlurb) {
+  const hint = [...workBlurb.querySelectorAll('p')].find((p) => /hover/i.test(p.textContent));
+  if (hint) hint.textContent = MOBILE_ICON_HINT;
+}
 const blurbDefault = workBlurb ? workBlurb.innerHTML : '';
 let blurbFrame = null;
 let blurbRestore = null;
@@ -421,7 +429,21 @@ document.querySelectorAll('.desk-icon').forEach((icon) => {
 
 // Desktop icons on the work stop: click (or Enter) flies to that project.
 // A "coming soon" icon (hidden project) just wiggles and shows its preview instead.
+// Phones work like a real Windows desktop: the first tap selects an icon (navy
+// label, and work.txt types out its preview), tapping it again opens it.
+function selectIcon(icon) {
+  document.querySelectorAll('.desk-icon.selected').forEach((other) => {
+    if (other !== icon) other.classList.remove('selected');
+  });
+  icon.classList.add('selected');
+  showBlurb(icon);
+}
+
 function openIcon(icon) {
+  if (MOBILE && !icon.classList.contains('selected')) {
+    selectIcon(icon);
+    return;
+  }
   if (icon.classList.contains('coming-soon')) {
     showBlurb(icon); // (on phones there's no hover, so tapping shows the note)
     icon.classList.remove('nope');
@@ -429,7 +451,23 @@ function openIcon(icon) {
     icon.classList.add('nope');
     return;
   }
+  if (icon.classList.contains('selected')) {
+    icon.classList.remove('selected');
+    restoreBlurb(); // so work.txt shows its intro again when you come back
+  }
   scrollToZone(icon.dataset.nav);
+}
+
+// phones: tapping anywhere that isn't an icon un-selects it (and work.txt goes back to its intro)
+// ("click" = a real tap, so just scrolling past doesn't clear it)
+if (MOBILE) {
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.desk-icon')) return;
+    const selected = document.querySelectorAll('.desk-icon.selected');
+    if (!selected.length) return;
+    selected.forEach((icon) => icon.classList.remove('selected'));
+    restoreBlurb();
+  });
 }
 
 document.querySelectorAll('.desk-icon[data-nav]').forEach((icon) => {
@@ -937,7 +975,19 @@ const ROSE_LOOK = {
   nod: 0.5,       // how far it tilts up/down
   ease: 0.08,     // 0–1: lower = lazier, higher = snappier
   autoSpin: 0,    // set to e.g. 0.35 to bring back the slow spin
+  touchHoldMs: 3000, // phones: how long it keeps looking at your last touch before drifting off
 };
+
+// phones: where the screen was last touched (the rose looks there)
+let touchLook = null;
+if (MOBILE) {
+  const remember = (e) => {
+    if (e.pointerType === 'mouse') return;
+    touchLook = { x: e.clientX, y: e.clientY, time: performance.now() };
+  };
+  window.addEventListener('pointerdown', remember, { passive: true });
+  window.addEventListener('pointermove', remember, { passive: true });
+}
 
 const roseTilt = new THREE.Vector2(); // eases toward the mouse
 const roseScreen = new THREE.Vector3();
@@ -983,12 +1033,22 @@ function setPanelState(panel, state) {
 
 function updateAbout(t) {
   if (roseView) {
-    // phones: always showing; gently looks around on its own (there's no cursor to follow)
+    // phones: it looks toward wherever you last touched the screen, and after a
+    // few seconds drifts back to gently looking around on its own
     roseGroup.visible = true;
     roseGroup.scale.setScalar(roseScale);
     roseGroup.position.set(0, Math.sin(t * 1.4) * 0.6, 0);
-    roseGroup.rotation.x = Math.sin(t * 0.5) * 0.15;
-    roseGroup.rotation.y = Math.sin(t * 0.35) * 0.5;
+    let lookX = Math.sin(t * 0.35) * 0.55;
+    let lookY = Math.sin(t * 0.5) * 0.3;
+    if (touchLook && performance.now() - touchLook.time < ROSE_LOOK.touchHoldMs) {
+      const r = roseView.slot.getBoundingClientRect();
+      lookX = THREE.MathUtils.clamp((touchLook.x - (r.left + r.width / 2)) / (window.innerWidth / 2), -1, 1);
+      lookY = THREE.MathUtils.clamp(-(touchLook.y - (r.top + r.height / 2)) / (window.innerHeight / 2), -1, 1);
+    }
+    roseTilt.x += (-lookY * ROSE_LOOK.nod - roseTilt.x) * ROSE_LOOK.ease;
+    roseTilt.y += (lookX * ROSE_LOOK.turn - roseTilt.y) * ROSE_LOOK.ease;
+    roseGroup.rotation.x = roseTilt.x;
+    roseGroup.rotation.y = roseTilt.y;
     updateSwapSpin(t);
     return;
   }
@@ -1052,22 +1112,33 @@ if (MOBILE) {
     el.dataset.state = 'visible';
   });
 
+  // (Checked by height on the page only — a window waiting off the side of the
+  // screen still counts as "here" once its row scrolls into view.)
+  const REVEAL_AT = 0.88; // flies in once its top passes this far down the screen (1 = bottom edge)
   const typed = new WeakSet();
-  const reveal = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      const el = entry.target;
-      const enough = entry.intersectionRatio >= 0.12 || entry.intersectionRect.height > window.innerHeight * 0.3;
-      if (entry.isIntersecting && enough) {
+  const reveals = [];
+  const checkReveals = () => {
+    const h = window.innerHeight;
+    reveals.forEach((el) => {
+      const r = el.getBoundingClientRect();
+      if (!r.height) return; // closed / hidden
+      if (r.top < h * REVEAL_AT && r.bottom > 0) {
+        if (el.classList.contains('in-view')) return;
         el.classList.add('in-view');
         if (!typed.has(el)) {
           typed.add(el);
           el.querySelectorAll('.win-body:not(.media)').forEach((body) => typeIn(body, 0.2));
         }
-      } else if (!entry.isIntersecting && entry.boundingClientRect.top > 0) {
+      } else if (r.top > h && !el.classList.contains('dragging')) {
         el.classList.remove('in-view'); // it's below the screen again → ready to fly in again
       }
     });
-  }, { threshold: [0, 0.12, 0.3] });
+  };
+  window.addEventListener('scroll', checkReveals, { passive: true });
+  window.addEventListener('resize', checkReveals);
+  window.addEventListener('load', checkReveals);
+  document.addEventListener('click', () => requestAnimationFrame(checkReveals)); // e.g. past.txt opening
+  requestAnimationFrame(checkReveals);
 
   document.querySelectorAll('.station-panel > *, #work-panel .desk-icon').forEach((el) => {
     if (el.classList.contains('desktop')) return; // its icons animate one by one instead
@@ -1078,7 +1149,7 @@ if (MOBILE) {
         : 'up';
     }
     el.classList.add('reveal');
-    reveal.observe(el);
+    reveals.push(el);
   });
 }
 function updateMobileBackButton() {

@@ -112,5 +112,20 @@ function setupBook(root) {
   });
   narrow.addEventListener('change', render);
 
+  // phones: swipe the page left/right to turn it, like a real book
+  if (document.documentElement.classList.contains('mobile')) {
+    let swipeX = null;
+    let swipeY = null;
+    spread.addEventListener('pointerdown', (e) => { swipeX = e.clientX; swipeY = e.clientY; });
+    spread.addEventListener('pointerup', (e) => {
+      if (swipeX === null) return;
+      const dx = e.clientX - swipeX;
+      const dy = e.clientY - swipeY;
+      swipeX = null;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) turn(dx < 0 ? 1 : -1);
+    });
+    spread.addEventListener('pointercancel', () => { swipeX = null; });
+  }
+
   render();
 }

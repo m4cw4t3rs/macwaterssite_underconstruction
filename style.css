@@ -1422,7 +1422,13 @@ body.sound-ok .sound-hint .hint-hover { display: inline; }
    small castle header → about → work icons → each project.
    ========================================================================= */
 html.mobile body {
-  overflow-x: clip; /* tilted photos never make the page scroll sideways */
+  overflow-x: hidden; /* (older iPhones) */
+  overflow-x: clip;   /* tilted photos + windows waiting off to the side never make the page scroll sideways */
+}
+
+/* phones: touches in the gaps between windows scroll the page (instead of spinning the header castle) */
+html.mobile body .station-panel.stage.visible {
+  pointer-events: auto;
 }
 
 /* gone on phones: nav cubes, the taskbar's window buttons, "scroll" hint, window buttons */
@@ -1461,7 +1467,22 @@ html.mobile .reveal {
   transition:
     translate 0.7s cubic-bezier(0.2, 1.25, 0.4, 1) var(--delay, 0s),
     scale 0.7s cubic-bezier(0.2, 1.25, 0.4, 1) var(--delay, 0s),
+    rotate 0.7s cubic-bezier(0.2, 1.25, 0.4, 1) var(--delay, 0s),
     opacity 0.4s ease-out var(--delay, 0s) !important;
+}
+
+/* a window being flung by its title bar follows the finger exactly (no spring until you let go) */
+html.mobile .reveal.dragging {
+  transition: none !important;
+  box-shadow: 6px 8px 0 rgba(0, 0, 0, 0.55);
+}
+
+/* title bars are the grab handles on phones (swiping anywhere else scrolls) */
+html.mobile .spring-handle {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
 }
 
 html.mobile .reveal:not(.in-view) { opacity: 0 !important; }
@@ -1633,4 +1654,44 @@ html.mobile .sm-has-sub:focus-within > .sm-submenu {
 
 html.mobile .sm-has-sub.open > .sm-submenu {
   display: block;
+}
+
+/* the taskbar stays clear of the notch when the phone is sideways */
+html.mobile #taskbar {
+  padding-left: max(3px, env(safe-area-inset-left, 0px));
+  padding-right: max(3px, env(safe-area-inset-right, 0px));
+}
+
+/* WORK icons on phones: first tap = selected (navy label, like Windows), second tap opens */
+html.mobile .desk-icon.selected .desk-label {
+  background: #000080;
+  outline: 1px dotted #ffffff;
+  text-shadow: none;
+}
+
+html.mobile .desk-icon.selected .desk-thumb {
+  filter: brightness(0.85) sepia(0.3) hue-rotate(180deg) saturate(2);
+}
+
+/* a tap that isn't a selection shouldn't leave the "hover" look stuck on an icon */
+html.mobile .desk-icon:not(.selected):hover .desk-label {
+  background: none;
+  outline: none;
+  text-shadow: 1px 1px 0 #000000;
+}
+
+html.mobile .desk-icon:not(.selected):hover .desk-thumb {
+  filter: none;
+}
+
+/* past.txt can be closed again on phones (its × shows; "past shows ↗" reopens it) */
+html.mobile .past-window .win-titlebar button[data-close] {
+  display: inline-flex !important;
+  width: 28px;
+  height: 22px;
+}
+
+/* the score book: swipe the page sideways to turn it; up/down still scrolls */
+html.mobile .book-spread {
+  touch-action: pan-y pinch-zoom; /* (pinch still zooms in on the notes) */
 }

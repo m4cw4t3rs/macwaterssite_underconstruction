@@ -21,6 +21,60 @@ export function initDraggables(root = document) {
   root.querySelectorAll('[data-resize]').forEach(makeResizable);
 }
 
+// PHONES: grab a window by its title bar and fling it around — it follows your
+// finger (tipping a little as it goes) and springs back into its place in the
+// column when you let go. (The spring itself is the CSS transition on .reveal.)
+// Only title bars grab, so swiping anywhere else still scrolls the page.
+const SPRING_DRAG = {
+  tilt: 0.06, // degrees of tip per pixel moved sideways
+  maxTilt: 9, // never tips more than this
+};
+
+export function initSpringDrag(root = document) {
+  root.querySelectorAll('.station-panel .win-window [data-drag-handle]').forEach((handle) => {
+    const win = handle.closest('.win-window');
+    const panel = win.closest('.station-panel');
+    handle.classList.add('spring-handle');
+    let start = null;
+
+    handle.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0 || e.target.closest('button, a')) return;
+      start = { x: e.clientX, y: e.clientY };
+      handle.setPointerCapture(e.pointerId);
+      win.classList.add('dragging');
+      win.style.zIndex = 50;   // over the other windows in its section…
+      panel.style.zIndex = 10; // …and over the next section
+    });
+
+    handle.addEventListener('pointermove', (e) => {
+      if (!start) return;
+      const dx = e.clientX - start.x;
+      const dy = e.clientY - start.y;
+      const tilt = Math.max(-SPRING_DRAG.maxTilt, Math.min(SPRING_DRAG.maxTilt, dx * SPRING_DRAG.tilt));
+      win.style.translate = `${dx}px ${dy}px`;
+      win.style.rotate = `${tilt}deg`;
+    });
+
+    const end = (e) => {
+      if (!start) return;
+      start = null;
+      if (handle.hasPointerCapture(e.pointerId)) handle.releasePointerCapture(e.pointerId);
+      win.style.setProperty('transition-delay', '0s', 'important'); // spring back right away (not after its fly-in delay)
+      win.classList.remove('dragging'); // turns the springy transition back on…
+      win.style.translate = '';         // …so it bounces home
+      win.style.rotate = '';
+      setTimeout(() => {
+        if (win.classList.contains('dragging')) return;
+        win.style.zIndex = '';
+        panel.style.zIndex = '';
+        win.style.removeProperty('transition-delay');
+      }, 800);
+    };
+    handle.addEventListener('pointerup', end);
+    handle.addEventListener('pointercancel', end);
+  });
+}
+
 // data-resize → adds a size grip (◢) in the bottom-right corner. Dragging it
 // changes the window's width; video/images inside keep their own shape, so the
 // height follows along and the aspect ratio never changes.
