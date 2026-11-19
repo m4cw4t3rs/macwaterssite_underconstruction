@@ -78,6 +78,13 @@ const mobileHero = MOBILE ? document.createElement('div') : null;
 if (MOBILE) {
   mobileHero.id = 'mobile-hero';
   document.body.prepend(mobileHero);
+  // All the sections go inside one full-width box that trims anything poking out
+  // the sides (windows waiting to fly in, flung windows), so the page can never
+  // scroll sideways or zoom out.
+  const page = document.createElement('div');
+  page.id = 'mobile-page';
+  mobileHero.after(page);
+  document.querySelectorAll('body > .station-panel').forEach((panel) => page.appendChild(panel));
 }
 document.body.appendChild(renderer.domElement);
 
@@ -228,7 +235,8 @@ let flightTimer = null;
 function scrollToZone(name, { glide = false } = {}) {
   const target = ZONE_ALIASES[name] || name;
   if (MOBILE) {
-    // phones: just scroll the page to that section (and remember it, so Back returns here)
+    // phones: a project opens as its own page (see showMobileProject); anything
+    // else scrolls the main page to that section. Either way it's remembered, so Back returns here.
     const el = target === 'home' ? null : document.getElementById(`${target}-panel`);
     if (target !== 'home' && !el) return;
     if (!fromHistory) {
@@ -236,8 +244,18 @@ function scrollToZone(name, { glide = false } = {}) {
       history.pushState({ stop: target }, '', url);
     }
     fromHistory = false;
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    else window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (PROJECT_STOPS.includes(target)) {
+      showMobileProject(target);
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      return;
+    }
+    const wasOnProject = !!mobileProject;
+    showMobileProject(null);
+    const behavior = wasOnProject ? 'instant' : 'smooth'; // coming back from a project: jump straight there
+    // the work desktop is the end of the page: go all the way down, so every icon shows
+    if (target === 'work') window.scrollTo({ top: document.documentElement.scrollHeight, behavior });
+    else if (el) el.scrollIntoView({ behavior, block: 'start' });
+    else window.scrollTo({ top: 0, behavior });
     return;
   }
   const z = zones.find((zone) => zone.name === target);
@@ -326,6 +344,10 @@ function jumpToStopFromAddress() {
   const name = stopFromHash();
   if (name === 'home') return;
   if (MOBILE) {
+    if (PROJECT_STOPS.includes(name)) {
+      showMobileProject(name);
+      return;
+    }
     // wait for images to settle the page's height, then jump to that section
     const go = () => document.getElementById(`${name}-panel`)?.scrollIntoView({ block: 'start' });
     if (document.readyState === 'complete') go();
@@ -561,6 +583,33 @@ dracoLoader.setDecoderPath(asset('draco/'));
 const gltfLoader = new GLTFLoader();
 gltfLoader.setDRACOLoader(dracoLoader);
 
+// --- Intro: fade in once everything's loaded ----------------------------------
+// The 3D scene stays hidden (html.loading, see style.css) until the castle and the
+// MACWATERS title have downloaded AND been prepared for the graphics card; then the
+// castle, title and cubes all fade in together — no popping in, no stutter.
+const INTRO = {
+  giveUpAfter: 10, // seconds: show the site anyway if loading takes longer than this
+};
+let introDone = false;
+
+// called when each model finishes; reveals the scene once both are in
+function introCheck() {
+  if (introDone || !titleMesh || !castleModel) return;
+  // Prepare every material + texture now (hidden), so the first visible frames don't hitch.
+  try { renderer.compile(scene, camera); } catch { /* fine — it just happens on first draw */ }
+  // let a few (invisible) frames draw, then fade everything in
+  let frames = 0;
+  const wait = () => (++frames < 4 ? requestAnimationFrame(wait) : finishIntro());
+  requestAnimationFrame(wait);
+}
+
+function finishIntro() {
+  if (introDone) return;
+  introDone = true;
+  document.documentElement.classList.remove('loading');
+}
+setTimeout(finishIntro, INTRO.giveUpAfter * 1000);
+
 // Uses castle_lite.glb if it exists (a lighter version — see MEDIA_GUIDE.md),
 // otherwise falls back to the original castle_web.glb.
 const CASTLE_FILES = ['models/castle/castle_lite.glb', 'models/castle/castle_web.glb'];
@@ -581,11 +630,12 @@ function loadCastle(files) {
       castleModel.rotation.set(0, 150, 0);
       camera.add(castleModel); // travels with the camera, so it can become part of the header
       dracoLoader.dispose();   // done decoding — release its helper workers
+      introCheck();
     },
     undefined,
     (err) => {
       if (files.length > 1) loadCastle(files.slice(1));
-      else console.error('failed to load castle:', err);
+      else { console.error('failed to load castle:', err); finishIntro(); }
     }
   );
 }
@@ -626,6 +676,10 @@ gltfLoader.load(asset('models/macwaters_text.glb'), (gltf) => {
   }
   titleMesh = object;
   updateIntroMotion();
+  introCheck();
+}, undefined, (err) => {
+  console.error('failed to load title:', err);
+  finishIntro();
 });
 
 // The title's letters form a tilted, spinning ring, so the part nearest the
@@ -657,9 +711,14 @@ function titleHeaderY(scale, top = headerTop()) {
 //   top  = where its top edge sits (1 = top of the screen, 0 = middle)
 //   tilt = how far the castle tips toward you (degrees)
 const TITLE_MOBILE = {
-  landing: { fill: 0.92, top: 0.42, tilt: 8 },  // the landing page: big, centered
+  landing: { fill: 1.0, top: 0.7, tilt: 10 },  // the landing page: big, centered
   header:  { fill: 0.5,  top: 0.97, tilt: 22 }, // a small logo pinned at the top
   scrollToHeader: 0.7, // how much of the landing page you scroll before it's fully a header (1 = all of it)
+};
+// The castle on the phone landing page: big, with the ring circling its tower tops (like desktop).
+const CASTLE_MOBILE_LANDING = {
+  fill: 1.0,   // castle width as a fraction of the ring's width (desktop is about 1.1)
+  poke: 0.052,  // how far the tower tops rise above the middle of the ring (fraction of the ring's width)
 };
 let mobileIntro = 0;       // 0 = landing arrangement, 1 = header (eases toward the scroll)
 let mobileIntroTarget = 0;
@@ -737,13 +796,25 @@ function updateCastle() {
   s = Math.min(s, (2 * (screenTop - targetCY)) / size.y);
 
   castleHeaderPos.set(0, targetCY - centerY * s, -TITLE_DISTANCE);
+
+  if (MOBILE) {
+    // phones: glide from the big landing castle (ring around its towers) to the header logo
+    const e = mobileEase();
+    const sLanding = (ring.width * CASTLE_MOBILE_LANDING.fill) / Math.max(size.x, size.z);
+    const towerTop = ring.cy + ring.width * CASTLE_MOBILE_LANDING.poke;
+    castleLandingPos.set(0, towerTop - castleBox.max.y * sLanding, -TITLE_DISTANCE);
+    castleModel.position.lerpVectors(castleLandingPos, castleHeaderPos, e);
+    castleModel.scale.setScalar(THREE.MathUtils.lerp(sLanding, s, e));
+    const tilt = THREE.MathUtils.lerp(TITLE_MOBILE.landing.tilt, TITLE_MOBILE.header.tilt, e);
+    castleModel.rotation.x = THREE.MathUtils.degToRad(tilt);
+    return;
+  }
+
   castleModel.position.lerpVectors(castleHomePos, castleHeaderPos, eased);
   castleModel.scale.setScalar(THREE.MathUtils.lerp(CASTLE_HOME.scale, s, eased));
-  const tilt = MOBILE
-    ? THREE.MathUtils.lerp(TITLE_MOBILE.landing.tilt, TITLE_MOBILE.header.tilt, mobileEase())
-    : CASTLE_HEADER.tilt;
-  castleModel.rotation.x = THREE.MathUtils.degToRad(tilt) * eased;
+  castleModel.rotation.x = THREE.MathUtils.degToRad(CASTLE_HEADER.tilt) * eased;
 }
+const castleLandingPos = new THREE.Vector3();
 
 // =============================================================================
 // ABOUT station — floating rose head + bio window (the window lives in index.html)
@@ -767,12 +838,20 @@ let roseNativeHeight = 1;
 
 // MOBILE: the rose gets its own little 3D view, placed in the about section
 // between about_mac.txt and upcoming.txt (the slot is made here, sized in style.css).
+// ROSE_MOBILE_SIZE = the rose's height as a fraction of its box (smaller = more room to turn without being cut off)
+const ROSE_MOBILE_SIZE = 0.75;
 let roseView = null; // { slot, renderer, scene, camera, onScreen }
 if (MOBILE) {
+  // a row: the rose on the left, the sticker photo of me on the right
+  const row = document.createElement('div');
+  row.id = 'rose-row';
   const slot = document.createElement('div');
   slot.id = 'rose-slot';
   slot.setAttribute('aria-label', 'a rose with eyes (tap it)');
-  document.querySelector('#about-panel .about-window')?.after(slot);
+  row.appendChild(slot);
+  const sticker = document.querySelector('#about-panel .about-photo');
+  if (sticker) row.appendChild(sticker);
+  document.querySelector('#about-panel .about-window')?.after(row);
   const roseRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: window.devicePixelRatio < 2 });
   roseRenderer.setPixelRatio(PIXEL_RATIO);
   roseRenderer.setClearColor(0x000000, 0);
@@ -798,6 +877,8 @@ function sizeRoseView() {
   roseView.camera.updateProjectionMatrix();
 }
 sizeRoseView();
+// re-fit whenever the rose's box changes size (e.g. after a style.css edit, or turning the phone)
+if (roseView) new ResizeObserver(() => sizeRoseView()).observe(roseView.slot);
 
 function applyRoseRotation() {
   const d = THREE.MathUtils.degToRad;
@@ -953,7 +1034,7 @@ function layoutAbout() {
     // phones: centered in its own view, filling most of its height
     const halfH = Math.tan(THREE.MathUtils.degToRad(roseView.camera.fov / 2)) * ROSE_DISTANCE;
     roseBase.set(0, 0, 0);
-    roseScale = (halfH * 2 * 0.8) / roseNativeHeight;
+    roseScale = (halfH * 2 * ROSE_MOBILE_SIZE) / roseNativeHeight;
     return;
   }
   const halfH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * ROSE_DISTANCE;
@@ -1106,6 +1187,7 @@ backButton?.addEventListener('click', (e) => {
 // the first time. Scroll back up past it and it resets, so it flies in again.
 // "back to desktop" shows once you've scrolled down into the projects.
 const firstProjectPanel = document.getElementById(`${PROJECT_STOPS[0]}-panel`);
+let mobileCheckReveals = () => {}; // (phones: set below)
 if (MOBILE) {
   stationPanels.forEach(({ el }) => {
     el.classList.add('visible');
@@ -1134,6 +1216,7 @@ if (MOBILE) {
       }
     });
   };
+  mobileCheckReveals = checkReveals;
   window.addEventListener('scroll', checkReveals, { passive: true });
   window.addEventListener('resize', checkReveals);
   window.addEventListener('load', checkReveals);
@@ -1145,16 +1228,37 @@ if (MOBILE) {
     if (!el.dataset.fly) {
       el.dataset.fly = el.classList.contains('about-window') ? 'left'
         : el.classList.contains('news-window') ? 'right'
-        : el.id === 'rose-slot' ? 'zoom'
+        : el.id === 'rose-row' ? 'zoom'
         : 'up';
     }
     el.classList.add('reveal');
     reveals.push(el);
   });
 }
+// MOBILE project pages: the main page ends at the work desktop. Tapping an icon
+// (or a project in the start menu) swaps the page for just that project, under
+// the small castle header; "◀ back to desktop" swaps back.
+let mobileProject = null; // the project page showing (null = the main page)
+if (MOBILE) {
+  PROJECT_STOPS.forEach((name) => document.getElementById(`${name}-panel`)?.classList.add('project-stop'));
+}
+function showMobileProject(name) {
+  const el = name ? document.getElementById(`${name}-panel`) : null;
+  document.querySelectorAll('.station-panel.project-showing').forEach((p) => p.classList.remove('project-showing'));
+  mobileProject = el ? name : null;
+  document.documentElement.classList.toggle('project-open', !!el);
+  if (el) {
+    el.classList.add('project-showing');
+    el.querySelectorAll('.reveal').forEach((r) => r.classList.remove('in-view')); // so its windows fly in fresh
+    mobileIntro = mobileIntroTarget = 1; // castle straight to the header
+  }
+  onScroll();
+  requestAnimationFrame(() => mobileCheckReveals());
+}
+
 function updateMobileBackButton() {
   if (!backButton || !firstProjectPanel) return;
-  const onProject = firstProjectPanel.getBoundingClientRect().top < window.innerHeight * 0.5;
+  const onProject = !!mobileProject;
   if (backButton.classList.contains('visible') === onProject) return;
   backButton.classList.toggle('visible', onProject);
   backButton.tabIndex = onProject ? 0 : -1;
@@ -1245,6 +1349,14 @@ if (MOBILE) {
   let touchX = null;
   canvas.addEventListener('pointerdown', (e) => {
     if (e.pointerType === 'mouse') return; // (the mouse version is above)
+    // touching a cube: it pops and spins (see MOBILE_CUBE_TAP)
+    if (mobileCubeShow > 0.5 && !mobileProject) {
+      const item = navItemAt({ x: e.clientX, y: e.clientY });
+      if (item) {
+        item.tappedAt = clock.getElapsedTime();
+        item.spinKick = MOBILE_CUBE_TAP.spin;
+      }
+    }
     touchX = e.clientX;
     isDragging = true;
     spinVelocity = 0;
@@ -1299,6 +1411,27 @@ const NAV_ITEMS = [
   },
 ];
 
+// MOBILE: the cubes sit in a row under the castle on the landing page, with their
+// words underneath, and shrink away as you scroll down.
+// List the ones to show, left to right (e.g. drop 'contact' and add the castle game here later).
+const MOBILE_CUBES = {
+  items: ['about', 'work', 'contact'],
+  y: 0.4,            // how high the row sits: 0 = bottom of the screen, 1 = top
+  size: 0.13,        // cube size as a fraction of the screen width
+  goneBy: 0.35,      // fully shrunk away once this much of the way to the header (0–1)
+  labelSize: 0.95,   // the words' height compared to a cube (bigger = bigger words)
+};
+let mobileCubeShow = 1; // 1 = full size (landing page), 0 = gone
+
+// MOBILE: tapping a cube — it pops bigger, does a quick spin, its edges flash white,
+// then (after `delay` seconds, so you see it) takes you to its page.
+const MOBILE_CUBE_TAP = {
+  pop: 0.45,      // how much bigger it gets at the peak (0.45 = 45% bigger)
+  popTime: 0.35,  // seconds for the pop to grow and settle back
+  spin: 0.35,     // the spin kick (it slows down by itself)
+  delay: 0.32,    // seconds before the page changes
+};
+
 const labelLayer = document.createElement('div');
 labelLayer.id = 'nav-labels';
 document.body.appendChild(labelLayer);
@@ -1331,13 +1464,40 @@ const alwaysShowLabels = window.matchMedia('(hover: none)').matches;
 let cubeSize = 50;
 
 function layoutHud() {
-  const w = window.innerWidth;
-  const h = window.innerHeight;
+  const { w, h } = viewSize(); // (= the window size on desktop)
   cubeSize = THREE.MathUtils.clamp(Math.min(w, h) * 0.07, 36, 64);
 
   hudCamera.right = w;
   hudCamera.top = h;
   hudCamera.updateProjectionMatrix();
+
+  if (MOBILE) {
+    // phones: one evenly spaced row, words centered underneath
+    cubeSize = THREE.MathUtils.clamp(Math.min(w, h) * MOBILE_CUBES.size, 32, 64);
+    const shown = MOBILE_CUBES.items.map((name) => NAV_ITEMS.find((it) => it.label === name)).filter(Boolean);
+    NAV_ITEMS.forEach((item) => {
+      const i = shown.indexOf(item);
+      item.mobileHidden = i < 0;
+      item.cube.visible = i >= 0;
+      if (i < 0) {
+        item.x = item.y = -99999; // (off screen, never tappable)
+        item.labelEl.style.display = 'none';
+        return;
+      }
+      item.x = (w * (i + 1)) / (shown.length + 1);
+      item.y = h * MOBILE_CUBES.y;
+      item.cube.position.set(item.x, item.y, 0);
+      const el = item.labelEl.style;
+      el.display = '';
+      el.top = `${h - item.y + cubeSize * 0.8}px`;
+      el.left = `${item.x}px`;
+      el.right = 'auto';
+      el.height = `${cubeSize * MOBILE_CUBES.labelSize}px`;
+      el.fontSize = `${cubeSize * MOBILE_CUBES.labelSize * 0.7}px`;
+      el.transform = 'translate(-50%, 0)';
+    });
+    return;
+  }
 
   const gap = cubeSize * 0.75 + 12; // half a grown cube + breathing room
   NAV_ITEMS.forEach((item) => {
@@ -1408,7 +1568,7 @@ const OFFSCREEN = -99999;
 const pointer = { x: OFFSCREEN, y: OFFSCREEN }; // in page pixels, (0,0) = top left
 
 function navItemAt(p) {
-  const h = window.innerHeight;
+  const h = viewSize().h; // (= the window height on desktop)
   for (const item of NAV_ITEMS) {
     const cx = item.x;
     const cy = h - item.y;
@@ -1448,7 +1608,15 @@ document.documentElement.addEventListener('mouseleave', () => {
 });
 
 window.addEventListener('click', (e) => {
-  if (MOBILE) return; // phones: no nav cubes (the rose has its own tap handler)
+  if (MOBILE) {
+    // phones: only the cube row on the landing page (the rose has its own tap handler)
+    if (e.target !== renderer.domElement || mobileCubeShow < 0.5 || mobileProject) return;
+    const item = navItemAt({ x: e.clientX, y: e.clientY });
+    if (!item) return;
+    if (!item.tappedAt) { item.tappedAt = clock.getElapsedTime(); item.spinKick = MOBILE_CUBE_TAP.spin; }
+    setTimeout(() => item.onClick(), MOBILE_CUBE_TAP.delay * 1000);
+    return;
+  }
   // Ignore the click that ends a castle drag.
   if (didDrag) {
     didDrag = false;
@@ -1467,7 +1635,7 @@ function onScroll() {
   if (frozenStop) return; // full-screen video open
   if (MOBILE) {
     const landing = mobileHero.offsetHeight * TITLE_MOBILE.scrollToHeader || 1;
-    mobileIntroTarget = THREE.MathUtils.clamp(window.scrollY / landing, 0, 1);
+    mobileIntroTarget = mobileProject ? 1 : THREE.MathUtils.clamp(window.scrollY / landing, 0, 1);
   }
   updateCameraTarget();
   updateIntroMotion();
@@ -1655,8 +1823,34 @@ function animateMobile(t) {
     if (Math.abs(spinVelocity) < 0.0001) spinVelocity = 0;
   }
 
+  // the cube row: full size on the landing page, shrinking away as you scroll
+  mobileCubeShow = mobileProject ? 0 : 1 - THREE.MathUtils.smoothstep(mobileIntro, 0, MOBILE_CUBES.goneBy);
+  const hoveredItem = mobileCubeShow > 0.5 ? navItemAt(pointer) : null;
+  NAV_ITEMS.forEach((item, i) => {
+    if (item.mobileHidden) return;
+    // tap: a spin kick that winds down, and a quick pop (grow, then settle)
+    const kick = item.spinKick || 0;
+    item.cube.rotation.x += [-0.002, 0.0025, 0.002][i] * 2 + kick;
+    item.cube.rotation.y += [0.001, -0.0012, 0.0013][i] * 2 + kick * 0.7;
+    item.spinKick = kick * 0.9;
+    let pop = 0;
+    if (item.tappedAt) {
+      const p = (t - item.tappedAt) / MOBILE_CUBE_TAP.popTime;
+      if (p >= 1.6) item.tappedAt = 0;
+      else pop = Math.sin(Math.PI * Math.min(p, 1)) * MOBILE_CUBE_TAP.pop;
+    }
+    item.edge.material.color.set(item.tappedAt ? 0xffffff : 0x000000);
+    const size = Math.max(cubeSize * ((item === hoveredItem ? 1.2 : 1) + pop) * mobileCubeShow, 0.001);
+    item.cube.scale.lerp(growTarget.set(size, size, size), pop ? 0.5 : 0.2);
+    item.labelEl.classList.toggle('visible', mobileCubeShow > 0.5);
+  });
+
   renderer.clear();
   renderer.render(scene, camera);
+  if (mobileCubeShow > 0.001) {
+    renderer.clearDepth(); // the cubes always draw on top
+    renderer.render(hudScene, hudCamera);
+  }
   // the rose only draws while its spot in the about section is on screen (saves battery)
   if (roseView?.onScreen) roseView.renderer.render(roseView.scene, roseView.camera);
 }

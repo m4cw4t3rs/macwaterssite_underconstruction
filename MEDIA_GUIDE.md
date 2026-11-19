@@ -73,12 +73,13 @@ Full pieces belong on Vimeo, linked from the description window.
 ### Making a lighter castle (do this once, in Terminal, from ~/code/macwaterssite)
 
 ```
-npx @gltf-transform/cli optimize public/models/castle/castle_web.glb public/models/castle/castle_lite.glb --compress draco --texture-size 1024 --simplify-ratio 0.15 --simplify-error 0.01
+npx @gltf-transform/cli optimize public/models/castle/castle_web.glb public/models/castle/castle_lite.glb --compress draco --texture-size 1024 --simplify false
 ```
 
-This keeps ~15% of the castle's 1.3 million points and shrinks its textures. The site
-automatically uses `castle_lite.glb` if it exists (and falls back to `castle_web.glb` if not).
-If it looks too chunky, try `--simplify-ratio 0.3`.
+This shrinks only the castle's textures (to the 1024px the site already uses) and leaves its
+shape untouched, so it looks exactly the same. (Simplifying the shape, `--simplify-ratio 0.15`,
+made the thin spires look wrong.) The site automatically uses `castle_lite.glb` if it exists
+(and falls back to `castle_web.glb` if not) — delete `castle_lite.glb` to go back to the original.
 
 ## Text formatting on project pages
 

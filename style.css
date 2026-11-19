@@ -8,6 +8,28 @@ body {
   visibility: visible;
 }
 
+/* =========================================================================
+   Intro: while the castle + title load (html has class="loading"), the 3D scene
+   (castle, title, cubes + their words) stays hidden; once everything is ready it
+   all fades in together. The fade length is the 1.6s below.
+   ========================================================================= */
+#three-canvas,
+#nav-labels {
+  transition: opacity 1.6s ease;
+}
+
+html.loading #three-canvas,
+html.loading #nav-labels,
+html.loading #scroll-hint {
+  opacity: 0;
+  /* failsafe: if something goes badly wrong, show the site anyway after 12 s */
+  animation: intro-failsafe 0s 12s forwards;
+}
+
+@keyframes intro-failsafe {
+  to { opacity: 1; }
+}
+
 /* anything marked hidden (e.g. a hidden project's icon) stays hidden, whatever its own style says */
 [hidden] {
   display: none !important;
@@ -1431,8 +1453,7 @@ html.mobile body .station-panel.stage.visible {
   pointer-events: auto;
 }
 
-/* gone on phones: nav cubes, the taskbar's window buttons, "scroll" hint, window buttons */
-html.mobile #nav-labels,
+/* gone on phones: the taskbar's window buttons, window buttons */
 html.mobile #taskbar .tb-tasks,
 html.mobile .win-titlebar .win-btn,
 html.mobile .win-titlebar .win-buttons,
@@ -1519,6 +1540,11 @@ html.mobile body .station-panel {
   scroll-margin-top: 18vh; /* jumping to a section lands just below the MACWATERS header */
 }
 
+/* extra space between the about section (upcoming.txt) and work.txt */
+html.mobile body #about-panel {
+  margin-bottom: 180px; /* GAP before the work desktop */
+}
+
 html.mobile body .station-panel > * {
   position: relative !important;
   inset: auto !important;
@@ -1542,29 +1568,90 @@ html.mobile .about-window .win-body {
   padding-bottom: 16px;
 }
 
-/* ABOUT: about_mac.txt → the rose (its own 3D view) → upcoming.txt → photo */
+/* ABOUT: about_mac.txt → [ rose | sticker of me ] side by side → upcoming.txt */
+html.mobile #rose-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 html.mobile #rose-slot {
-  height: min(80vw, 340px);
+  flex: 1 1 55%;
+  min-width: 0;
+  height: min(58vw, 260px); /* ROSE BOX HEIGHT (the rose's size inside it: ROSE_MOBILE_SIZE in main.js) */
 }
 
 html.mobile #rose-slot canvas {
   display: block;
+  margin: 0 auto; /* centered in its box */
 }
 
-html.mobile body .about-photo {
-  width: min(55%, 220px) !important;
-  align-self: center;
-  rotate: -4deg;
+/* the sticker floats over about_mac.txt's bottom-left corner. It takes up no room
+   of its own, so the rose stays centered on the page. */
+html.mobile body #rose-row .about-photo {
+  position: absolute !important;
+  inset: auto !important;
+  top: -90px !important;  /* OVERLAP: how far up over the window (more negative = higher) */
+  left: -10px !important; /* how far it hangs off the left edge */
+  z-index: 2;             /* in front of the about window */
+  width: 30% !important;  /* STICKER SIZE (share of the page width: smaller % = smaller sticker) */
+  margin: 0;
+  transform: none !important;
+  rotate: -6deg;          /* sticker tilt */
+  filter: none !important;
+  opacity: 1 !important;
 }
 
-/* PROJECT PAGES: videos / players first, then the description, then photos.
-   (lower number = higher up; same number = order in index.html) */
-html.mobile .stage > .float-img:not(.photo)            { order: 0; } /* a project logo */
-html.mobile .stage > .win-window:has(.win-body.player)  { order: 1; } /* playlist.exe */
-html.mobile .stage > .win-window:has(.win-body.media)   { order: 2; } /* videos, scores */
-html.mobile .stage > .win-window                        { order: 3; } /* descriptions */
+html.mobile #rose-slot {
+  flex: 1 1 100%; /* the rose gets the whole row, so it's centered */
+}
+
+/* no extra room at the bottom of about_mac.txt… */
+html.mobile .about-window .win-body {
+  padding-bottom: 0px;
+}
+
+/* …instead the contact line is indented, so the sticker sits beside it, not on top of it */
+html.mobile .about-window .win-body p:last-child {
+  padding-left: 14%; /* CONTACT INDENT (about the sticker's width) */
+}
+
+/* PROJECT PAGES: the description (.txt) first, as the page's title, then the
+   logo, players, videos, and photos. (lower number = higher up; same number = order in index.html) */
+html.mobile .stage > .win-window:not(:has(.win-body.media)) { order: 0; } /* the description */
+html.mobile .stage > .float-img:not(.photo)            { order: 1; } /* a project logo */
+html.mobile .stage > .win-window:has(.win-body.player)  { order: 2; } /* playlist.exe */
+html.mobile .stage > .win-window:has(.win-body.media)   { order: 3; } /* videos, scores */
 html.mobile .stage > .float-img.photo                   { order: 4; } /* snapshots */
 html.mobile #work-panel > *                             { order: 0; } /* work: keep work.txt above the icons */
+
+/* the box holding every section: trims anything poking out the sides, so the
+   page never scrolls sideways (and can't be zoomed out) */
+html.mobile #mobile-page {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  overflow-x: hidden; /* (older iPhones) */
+  overflow-x: clip;
+  overflow-y: visible;
+}
+
+/* the main page ends at the work desktop: project pages only show when opened */
+html.mobile body .station-panel.project-stop:not(.project-showing) {
+  display: none !important;
+}
+
+/* a project open: it's the only thing on the page, below the small castle header */
+html.mobile.project-open #mobile-hero,
+html.mobile.project-open #about-panel,
+html.mobile.project-open #work-panel {
+  display: none !important;
+}
+
+html.mobile body .station-panel.project-showing {
+  padding-top: 18vh; /* room for the MACWATERS header */
+  min-height: 100svh;
+}
 
 html.mobile body .stage > .float-img {
   width: min(80%, 340px) !important;
