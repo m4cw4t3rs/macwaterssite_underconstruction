@@ -1770,17 +1770,36 @@ document.addEventListener('video-fullscreen', () => {
 });
 
 function unfreeze() {
-  if (!frozenStop || anyFullscreen()) return;
+  if (!frozenStop || anyFullscreen() || unfreezing) return;
+  unfreezing = true;
   const name = frozenStop;
-  frozenStop = null;
-  onResize();
-  const z = zones.find((zone) => zone.name === name);
-  if (!z) return;
-  window.scrollTo({ top: z.start, behavior: 'instant' });
-  camera.position.z = z.cameraZ;
-  targetCameraZ = z.cameraZ;
-  onScroll();
+  // Leaving full screen, the browser window takes a moment to get back to its normal
+  // size (and may nudge the scroll position on the way). Stay frozen until the size
+  // has stopped changing for a few frames, THEN re-measure and land on the stop.
+  let lastW = 0;
+  let lastH = 0;
+  let still = 0;
+  let frames = 0;
+  const settle = () => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    still = w === lastW && h === lastH ? still + 1 : 0;
+    lastW = w;
+    lastH = h;
+    if (still < 8 && ++frames < 90) { requestAnimationFrame(settle); return; }
+    unfreezing = false;
+    frozenStop = null;
+    onResize();
+    const z = zones.find((zone) => zone.name === name);
+    if (!z) return;
+    window.scrollTo({ top: z.start, behavior: 'instant' });
+    camera.position.z = z.cameraZ;
+    targetCameraZ = z.cameraZ;
+    onScroll();
+  };
+  requestAnimationFrame(settle);
 }
+let unfreezing = false;
 document.addEventListener('fullscreenchange', unfreeze);
 document.addEventListener('webkitfullscreenchange', unfreeze);
 
