@@ -1,59 +1,633 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="loading">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MAC WATERS 🏰</title>
+    <!-- viewport-fit=cover: on iPhones the gradient fills behind the notch / home bar (style.css keeps the taskbar clear of them) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>MAC WATERS 🏰 · multimedia composer-performer</title>
+    <meta name="description" content="mac waters is a multimedia composer, violist, and improviser based in vermont, working across concert music, installation, film, XR, and game design." />
+    <!-- Keep the page blank until style.css has loaded (style.css turns it back on).
+         Without this, Safari can paint every window unstyled for a split second. -->
+    <style>body { visibility: hidden; }</style>
+    <!-- Space Mono (body font) from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap">
     <link rel="icon" type="image/png" href="images/rose_head_favicon.png">
-    <link rel="apple-touch-icon" href="/images/rose_head_favicon.png">
-
-    <style>
-       body, html {
-  margin: 0;
-  padding: 0;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  /* Do NOT use overflow: hidden here */
-}
-
-#three-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 1000vh;
-  z-index: 0;
-  pointer-events: auto; /* If you want HTML elements to be clickable above the canvas */
-}
-
-#scroll-content {
-  position: relative;
-  z-index: 1;
-  /* Your scrollable content styles here */
-}
-
-
-
-
-    </style>
-    
-    <script type="module" crossorigin src="/assets/index-B70ouYg0.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-CwDU2VsB.css">
+    <link rel="apple-touch-icon" href="images/rose_head_favicon.png">
+    <script type="module" crossorigin src="/assets/index-Cd5VuiP1.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-Bc-xEQGG.css">
   </head>
   <body>
-    <div id="bio-block">
-  <p>mac waters is a multimedia composer/violist based in vermont. </p>
-  <p>my site is currently under construction. pls contact <a href="mailto:macarthur.waters@gmail.com" target="_blank" style="color: lightblue;">macarthur.waters@gmail.com</a> with any creative inquiries xoxo </p>
-  <p>🏰🎻💿</p>
-</div>
-    <div class ="marquee-container">
-  <span class="marquee-text"> 
-      SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; </span>
-  <span class="marquee-text"> 
-       SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp;  SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 &nbsp; SITE UNDER CONSTRUCTION 🚧 </span>
-</div>
+    <!-- Hidden from view, but read by search engines and screen readers -->
+    <!-- (keep this in step with the bio in about_mac.txt) -->
+    <div class="sr-only">
+      <h1>mac waters — multimedia composer, violist, and improviser</h1>
+      <p>mac waters is a multimedia composer, violist, and improviser based in vermont. a graduate of the dartmouth college mfa in sonic practice, mac composes multichannel and electroacoustic music for concert, installation, and film settings, and works across interactive media and video, extended reality, improvisation, graphic design, and game design.</p>
+      <p>mac’s works have been performed by fonema consort, wet ink, mivos quartet, conrad tao, ostravská banda, and ars futura, and mac has performed as a violist-improviser with tomeka reid’s stringtet and anthony braxton’s creative orchestra.</p>
+      <p>at dartmouth college, mac is the digital technician specialist for the departments of film &amp; media studies and studio art, and previously served as an XR for the humanities fellow at the DREAM Studio (dartmouth resources for emergent arts and media).</p>
+      <p>BA Music &amp; Medieval &amp; Renaissance Studies, Columbia University<br>MFA Sonic Practice, Dartmouth College</p>
+      <p>work: DreamVisions+, GUIDED_MEDITATIONS, LIVE.exe (solo live sets), TikTokBox, soloviolarecital, SHOKWII, and concert music including pop song, Justin Bieber — Baby (remix), and erosion as a form of creation.</p>
+      <p>contact: <a href="mailto:macarthur.waters@gmail.com">macarthur.waters@gmail.com</a></p>
+    </div>
 
+    <div id="scroll-hint">scroll &darr;</div>
+
+    <!-- Shows on every project stop; takes you back to the work desktop -->
+    <button id="back-to-desktop" class="back-btn" tabindex="-1">&#9664; back to desktop</button>
+
+    <!-- ABOUT station: flies in when the camera reaches "about". Edit your bio here. -->
+    <section id="about-panel" class="station-panel" aria-label="about">
+      <div class="win-window about-window" data-drag>
+        <div class="win-titlebar" data-drag-handle>
+          <span>about_mac.txt</span>
+          <span class="win-buttons" aria-hidden="true">
+            <span class="win-btn">_</span><span class="win-btn">&#9633;</span>
+          </span>
+          <button id="about-close" class="win-btn" aria-label="close, back to the castle">&times;</button>
+        </div>
+        <div class="win-body">
+          <h2 data-oldlondon>about me 💿🏰🎻</h2>
+          <p>mac waters is a multimedia composer, violist, and improviser based in vermont. a graduate of the dartmouth college mfa in sonic practice, mac composes multichannel and electroacoustic music for concert, installation, and film settings, and works across interactive media and video, extended reality, improvisation, graphic design, and game design.</p>
+          <p>mac’s works have been performed by fonema consort, wet ink, mivos quartet, conrad tao, ostravská banda, and ars futura, and mac has performed as a violist-improviser with tomeka reid’s stringtet and anthony braxton’s creative orchestra.</p>
+          <p>at dartmouth college, mac is the digital technician specialist for the departments of film &amp; media studies and studio art, and previously served as an XR for the humanities fellow at the DREAM Studio (dartmouth resources for emergent arts and media).</p>
+          <p class="details education">BA Music &amp; Medieval &amp; Renaissance Studies, Columbia University<br>
+          MFA Sonic Practice, Dartmouth College</p>
+          <p>contact: <a href="mailto:macarthur.waters@gmail.com">macarthur.waters@gmail.com</a></p>
+        </div>
+      </div>
+
+      <!-- Second window: shows, releases, news. Rename the title / swap the content freely. -->
+      <div class="win-window news-window" data-drag>
+        <div class="win-titlebar" data-drag-handle>
+          <span>upcoming.txt</span>
+          <span class="win-buttons" aria-hidden="true">
+            <span class="win-btn">_</span><span class="win-btn">&#9633;</span>
+          </span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body">
+          <ul>
+            <li><b>feb.tbd</b> — ars memoriae, rauner special collections library, hanover nh</li>
+            <li><b>mar.4</b> — dartmouth symphony orchestra, hopkins center for the arts, hanover nh</li>
+            <li><b>apr.12</b> — tomeka reid stringtet @ levine music school gala, washington dc </li>
+          </ul>
+          <!-- opens past.txt (it starts closed) -->
+          <p class="past-link"><button type="button" class="link-btn" data-open="past-window">past shows ↗</button></p>
+        </div>
+      </div>
+
+      <!-- Third window: past shows. Starts CLOSED; the "past shows ↗" link in upcoming.txt opens it.
+           Move a line here from upcoming.txt once it's happened (newest at the top). -->
+      <div class="win-window news-window past-window closed" id="past-window" data-start-closed data-drag>
+        <div class="win-titlebar" data-drag-handle>
+          <span>past.txt</span>
+          <span class="win-buttons" aria-hidden="true">
+            <span class="win-btn">_</span><span class="win-btn">&#9633;</span>
+          </span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body">
+          <ul>
+            <li><b>oct.29</b> — chris sollars “the neighbors” live soundtrack performance, 0102 gallery, hanover nh</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Your photo/illustration: save it as public/images/about-me.png -->
+      <figure class="about-photo" data-drag>
+        <img src="/images/about-me.png" alt="mac waters" draggable="false" onerror="this.closest('figure').classList.add('no-photo')">
+        <figcaption>your photo here<br>(save as public/images/about-me.png)</figcaption>
+      </figure>
+    </section>
+
+    <!-- =====================================================================
+         WORK stops. Each <section id="NAME-panel"> matches a stop in main.js.
+         - position each window with style="left: …; top: …; width: …"
+         - data-fly="left | right | up | down" = which way it swoops in from
+         - --delay staggers the arrivals
+         ===================================================================== -->
+
+    <!-- WORK desktop: one icon per project. Thumbnails go in public/media/thumbs/
+         (e.g. dreamvisions.png). Until a thumbnail exists, the emoji shows instead. -->
+    <section id="work-panel" class="station-panel stage" aria-label="work">
+      <!-- Intro window for the work desktop. Edit the text here. -->
+      <div class="win-window" data-drag data-fly="down" style="left: calc(50% - 220px); top: 31%; width: 440px;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>work.txt</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <!-- DEFAULT TEXT (shown on load and whenever you're not hovering an icon) -->
+        <div class="win-body" id="work-blurb">
+          <p>mac’s work moves between fixed media and video art, interactive media, recorded music, and live performance.</p>
+          <br>
+          <p>hover an icon for a preview; click (or tap) to open.</p>
+        </div>
+      </div>
+
+      <div class="desktop">
+        <div class="desk-icon" role="button" tabindex="0" data-nav="dreamvisions" data-year="[2025-ongoing]" data-blurb="an ongoing multimedia ecosystem that adapts medieval 'dream vision' poetry into an ever-evolving digital dream world, spanning live performance, immersive media, and game design. *Dream. Share. Connect.*" data-drag data-fly="up" style="--delay: 0s;">
+          <span class="desk-thumb">
+            <span class="icon-ph" aria-hidden="true"></span>
+            <img src="/media/thumbs/dreamvisions.png" alt="" draggable="false" onload="this.parentElement.classList.add('has-img')" onerror="this.remove()">
+          </span>
+          <span class="desk-label">DreamVisions+</span>
+        </div>
+        <div class="desk-icon" role="button" tabindex="0" data-nav="meditations" data-year="[2024-ongoing]" data-blurb="THANK YOU FOR SUBSCRIBING TO THE 14-DAY DIGITAL CYBERMINDFULNESS ENLIGHTENMENT JOURNEY." data-drag data-fly="up" style="--delay: 0.08s;">
+          <span class="desk-thumb">
+            <span class="icon-ph" aria-hidden="true"></span>
+            <img src="/media/thumbs/meditations.png" alt="" draggable="false" onload="this.parentElement.classList.add('has-img')" onerror="this.remove()">
+          </span>
+          <span class="desk-label">GUIDED_<wbr>MEDITATIONS</span>
+        </div>
+        <!-- LIVE.exe: add your thumbnail as public/media/thumbs/live.png -->
+        <div class="desk-icon" role="button" tabindex="0" data-nav="live" data-year="" data-blurb="excerpts of live performances of original music, collaborations, and improvisation." data-drag data-fly="up" style="--delay: 0.12s;">
+          <span class="desk-thumb">
+            <span class="icon-ph" aria-hidden="true">🎤</span>
+            <img src="/media/thumbs/live.png" alt="" draggable="false" onload="this.parentElement.classList.add('has-img')" onerror="this.remove()">
+          </span>
+          <span class="desk-label">LIVE.exe</span>
+        </div>
+        <div class="desk-icon" role="button" tabindex="0" data-nav="bookofhours" data-year="[upcoming]" data-blurb="my forthcoming electroviola psychedelic genrefluid pop album. release date TBD." data-drag data-fly="up" style="--delay: 0.16s;">
+          <span class="desk-thumb">
+            <span class="icon-ph" aria-hidden="true"></span>
+            <img src="/media/thumbs/bookofhours.png" alt="" draggable="false" onload="this.parentElement.classList.add('has-img')" onerror="this.remove()">
+          </span>
+          <span class="desk-label">Book of Hours</span>
+        </div>
+        <div class="desk-icon" role="button" tabindex="0" data-nav="tiktokbox" data-year="[2022/2024]" data-blurb="multichannel performance/installation that uses a motion-sensing body suit to distort and livemix doomscrolling in real time across two giant vertical phone screens and spatialized audio." data-drag data-fly="up" style="--delay: 0.24s;">
+          <span class="desk-thumb">
+            <span class="icon-ph" aria-hidden="true"></span>
+            <img src="/media/thumbs/tiktokbox.png" alt="" draggable="false" onload="this.parentElement.classList.add('has-img')" onerror="this.remove()">
+          </span>
+          <span class="desk-label">TikTokBox</span>
+        </div>
+        <div class="desk-icon" role="button" tabindex="0" data-nav="violarecital" data-year="[2024]" data-blurb="a motion-captured improvisational viola performance becomes the basis for a fixed-media 3D-animation work. " data-drag data-fly="up" style="--delay: 0.32s;">
+          <span class="desk-thumb">
+            <span class="icon-ph" aria-hidden="true">🎻</span>
+            <img src="/media/thumbs/violarecital.png" alt="" draggable="false" onload="this.parentElement.classList.add('has-img')" onerror="this.remove()">
+          </span>
+          <span class="desk-label">soloviolarecital</span>
+        </div>
+        <div class="desk-icon" role="button" tabindex="0" data-nav="shokwii" data-year="[2023]" data-blurb="a short film remixing the content from the YouTube vlogs made by my 10-year-old self." data-drag data-fly="up" style="--delay: 0.4s;">
+          <span class="desk-thumb">
+            <span class="icon-ph" aria-hidden="true">💾</span>
+            <img src="/media/thumbs/shokwii.png" alt="" draggable="false" onload="this.parentElement.classList.add('has-img')" onerror="this.remove()">
+          </span>
+          <span class="desk-label">SHOKWII</span>
+        </div>
+        <div class="desk-icon" role="button" tabindex="0" data-nav="filmscoring" data-year="" data-blurb="a selection of original scoring work for films made by other artists." data-drag data-fly="up" style="--delay: 0.48s;">
+          <span class="desk-thumb">
+            <span class="icon-ph" aria-hidden="true">🎬</span>
+            <img src="/media/thumbs/filmscoring.png" alt="" draggable="false" onload="this.parentElement.classList.add('has-img')" onerror="this.remove()">
+          </span>
+          <span class="desk-label">Film Scoring</span>
+        </div>
+        <div class="desk-icon" role="button" tabindex="0" data-nav="composition" data-year="" data-blurb="a collection of scored work for concert settings, performed by other musicians." data-drag data-fly="up" style="--delay: 0.56s;">
+          <span class="desk-thumb">
+            <span class="icon-ph" aria-hidden="true">🎼</span>
+            <img src="/media/thumbs/composition.png" alt="" draggable="false" onload="this.parentElement.classList.add('has-img')" onerror="this.remove()">
+          </span>
+          <span class="desk-label">Concert Music</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- DreamVisions+ -->
+    <section id="dreamvisions-panel" class="station-panel stage" aria-label="DreamVisions+">
+      <div class="win-window" data-drag data-fly="left" style="left: 10%; top: 30%; width: 450px;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>dreamvisions+.txt</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body" style="max-height: 50vh;">
+          <h2>DreamVisions+ <span class="year">[2025-ongoing]</span></h2>
+          <p>a transdigital, transhistorical odyssey into the realm of fiction and truth, reality and virtuality. rooted in late medieval dream-vision poems (Chaucer’s <i>House of Fame</i>, Langland’s <i>Piers Plowman</i>, the <i>Roman de la Rose</i>), DreamVisions+ reads these psychedelic allegories as proto-VR and stages a multimedia dream vision of the digital age: an expansive intermedia universe spanning live performance, immersive projection, game, and installation. <br><br> <i>DreamVisions+_WALLED_GARDEN.exe</i> takes the form of a lost-to-time CD-ROM game, maybe found in a dusty cereal box from 1998, running on a CRT television in your friend’s finished basement living room. In the game, you play as an anthropomorphic rose awakened inside of a walled garden, a locale stolen from the thirteenth-century Romance of the Rose. (The title also nods to the tech term: a “walled garden” is a closed digital ecosystem where one company controls hardware, software, and data). The garden is populated by various allegorical figures—such as Idleness, Diversion, and Lady Reason—who impart various nuggets of wisdom to you as you explore the retro medieval dreamworld. The game features original 3D models as well as artwork from illuminated manuscripts, text from the medieval source material as well as original dialogue, and original music and sound effects.</p>
+          <!-- works lines: <i>Title</i> (Year), medium, site — one per line, joined with <br> -->
+          <p class="details"><i>DreamVisions+</i> [2025], workshop performance, DREAM Studio, Dartmouth College<br><br>
+          <i>DreamVisions+_WALLED_GARDEN.exe</i> [2026], interactive game installation, <a href="https://studioart.dartmouth.edu/news/2026/10/hours-works-vac-staff" target="_blank" rel="noopener">Off Hours</a>, Nearburg Gallery, Hanover, NH</p>
+        </div>
+      </div>
+
+      <!-- WALLED_GARDEN installation photos: behind the other windows (they come earlier
+           in the page), in front of the description. Move with left/top, size with width. -->
+      <!-- a silent looping clip (like a GIF) of the CRT title screen, styled like the photos -->
+      <video class="float-img photo" src="/media/dreamvisions/walled-garden/walled-garden-loop.mp4"
+             poster="/media/dreamvisions/walled-garden/walled-garden-loop-poster.jpg"
+             muted loop playsinline preload="none" aria-label="the DreamVisions+_WALLED_GARDEN.exe title screen glowing on a CRT"
+             data-drag data-fly="down" style="left: 49%; top: 30%; width: 190px; rotate: 4deg; --delay: 0.3s;"></video>
+      <img class="float-img photo" src="/media/dreamvisions/walled-garden/walled-garden-01.jpg" alt="DreamVisions+_WALLED_GARDEN.exe: a CRT, lamp, and plant in a 1998-style living room corner"
+           data-drag data-fly="up" draggable="false"
+           style="left: 39.5%; top: 42%; width: 210px; rotate: -5deg; --delay: 0.2s;">
+
+      <!-- DreamVisions+ logo, floating over the top of the window. Move it with left/top,
+           size it with width, tilt it with rotate. (Comes after the window, so it sits in front.) -->
+      <img class="float-img" src="/media/dreamvisions/dreamvisions_logo.png" alt="DreamVisions+"
+           data-drag data-fly="right" draggable="false"
+           style="left: 35%; top: 22%; width: min(30vw, 600px); rotate: 0deg; --delay: 0.15s;">
+
+      <!-- Performance excerpts: one window, a button per clip (add/remove buttons freely).
+           Files live in public/media/dreamvisions/performance/ -->
+      <div class="win-window" data-drag data-resize data-fly="right" style="right: 4%; top: 39%; width: min(40vw, 540px); --delay: 0.1s;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>dreamvisions_excerpts.mp4</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body media clips" data-clips>
+          <video src="/media/dreamvisions/performance/garden.mp4" poster="/media/dreamvisions/performance/garden-poster.jpg"
+                 muted loop playsinline preload="none" data-sound-group="dreamvisions" aria-label="DreamVisions+ excerpt"></video>
+          <div class="clip-tabs" role="group" aria-label="choose an excerpt">
+            <button class="player-btn clip-tab active" data-src="/media/dreamvisions/performance/garden.mp4" data-poster="/media/dreamvisions/performance/garden-poster.jpg">garden</button>
+            <button class="player-btn clip-tab" data-src="/media/dreamvisions/performance/violaimprov.mp4" data-poster="/media/dreamvisions/performance/violaimprov-poster.jpg">viola</button>
+            <button class="player-btn clip-tab" data-src="/media/dreamvisions/performance/narcissus.mp4" data-poster="/media/dreamvisions/performance/narcissus-poster.jpg">narcissus</button>
+            <button class="player-btn clip-tab" data-src="/media/dreamvisions/performance/lucid.mp4" data-poster="/media/dreamvisions/performance/lucid-poster.jpg">lucid</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gameplay: a silent loop, like a game's attract screen on the CRT.
+           When the Hi-8 rip is ready, replace the placeholder with:
+           <video src="/media/dreamvisions/gameplay/gameplay.mp4" muted loop playsinline preload="none"></video> -->
+      <div class="win-window" data-drag data-resize data-fly="up" style="left: 42%; top: 62%; width: 280px; --delay: 0.25s;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>WALLED_GARDEN.exe</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body media">
+          <div class="media-ph crt">Hi-8 gameplay<br>(coming soon)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GUIDED_MEDITATIONS: two videos that play together -->
+    <section id="meditations-panel" class="station-panel stage" aria-label="GUIDED_MEDITATIONS">
+      <!-- (video 1 is 4:3 and video 2 is 16:9, so window 1 is 3/4 as wide — same height) -->
+      <div class="win-window" data-drag data-resize data-fly="right" style="left: 36%; top: 24%; width: min(30vw, 420px); --delay: 0.1s;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>meditation_1.mp4</span>
+          <span class="sound-badge" aria-hidden="true">🔇</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body media">
+          <video src="/media/guided-meditations/meditation-1.mp4"
+                 poster="/media/guided-meditations/meditation-1-poster.jpg"
+                 muted loop playsinline preload="none" data-sound-group="meditations"
+                 aria-label="GUIDED_MEDITATION 1 (excerpt)"></video>
+          <div class="sound-hint" aria-hidden="true">
+            <span class="hint-before">🔈 click for sound</span>
+            <span class="hint-hover">🔈 hover for sound</span>
+            <span class="hint-tap">🔈 tap for sound</span>
+          </div>
+        </div>
+      </div>
+      <div class="win-window" data-drag data-resize data-fly="right" style="right: 3%; top: 50%; width: min(41vw, 580px); --delay: 0.2s;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>meditation_2.mp4</span>
+          <span class="sound-badge" aria-hidden="true">🔇</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body media">
+          <video src="/media/guided-meditations/meditation-2.mp4"
+                 poster="/media/guided-meditations/meditation-2-poster.jpg"
+                 muted loop playsinline preload="none" data-sound-group="meditations"
+                 aria-label="GUIDED_MEDITATION 2 (excerpt)"></video>
+          <div class="sound-hint" aria-hidden="true">
+            <span class="hint-before">🔈 click for sound</span>
+            <span class="hint-hover">🔈 hover for sound</span>
+            <span class="hint-tap">🔈 tap for sound</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- EDIT THE DESCRIPTION HERE -->
+      <div class="win-window" data-drag data-fly="left" style="left: 5%; top: 33%; width: min(32vw, 460px);">
+        <div class="win-titlebar" data-drag-handle>
+          <span>GUIDED_MEDITATIONS.txt</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body">
+          <h2>GUIDED_MEDITATIONS <span class="year">[2024-ongoing]</span></h2>
+          <p>a series of video meditations for scrolling: guides to entering the digital stream with reverence for the Algorithm. 🧘☮️📲 time-stretched AI voices lead the listener through a “fourteen-day cybermindfulness enlightenment journey,” with original electronic music, viola improvisation, and Hi-8 video tapes as well as 3D animations built in Unity.</p>
+          <!-- works lines: <i>Title</i> (Year), medium, site — one per line, joined with <br> -->
+          <p class="details"><i>GUIDED_MEDITATION_1</i> [2024], Hi-8 video<br><br>
+          <i>GUIDED_MEDITATION_2</i> [2026], electroacoustic performance with video and 3D animation, <a href="https://unprofessionalvarietyshow.com" target="_blank" rel="noopener">Unprofessional Variety Show</a>, New York, NY</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIVE.exe: solo sets of original music -->
+    <!-- "pair" page: the .txt and .mp4 windows sit centered side by side with a gap
+         (see .stage.pair in style.css). --txt-w / --vid-w = the two window widths. -->
+    <section id="live-panel" class="station-panel stage pair" aria-label="LIVE.exe"
+             style="--txt-w: min(30vw, 400px); --vid-w: min(48vw, 680px);">
+      <!-- EDIT THE DESCRIPTION HERE -->
+      <div class="win-window pair-txt" data-drag data-fly="left" style="top: 36%;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>LIVE.txt</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body">
+          <h2>LIVE.exe <span class="year">[ongoing]</span></h2>
+          <p>electroacoustic solo sets featuring amplified viola & voice with synthesizers, performed with Ableton Push.</p>
+          <!-- works lines: <i>Title</i> (Year), medium, site — one per line, joined with <br> -->
+          <p class="details"><i>LIVE.exe</i> [2025], solo live set, Main Street Museum, White River Junction, VT</p>
+        </div>
+      </div>
+
+      <!-- The set: one window, a button per song (add/remove buttons freely).
+           Files live in public/media/live/ -->
+      <div class="win-window pair-vid" data-drag data-resize data-fly="right" style="top: 30%; --delay: 0.12s;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>live_set.mp4</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body media clips" data-clips>
+          <video src="/media/live/intro.mp4" poster="/media/live/intro-poster.jpg"
+                 muted loop playsinline preload="none" data-sound-group="live" aria-label="live solo set at Main Street Museum"></video>
+          <div class="clip-tabs" role="group" aria-label="choose a song">
+            <button class="player-btn clip-tab active" data-src="/media/live/intro.mp4" data-poster="/media/live/intro-poster.jpg">intro</button>
+            <button class="player-btn clip-tab" data-src="/media/live/haveyoueverhadadream.mp4" data-poster="/media/live/haveyoueverhadadream-poster.jpg">haveyoueverhadadream</button>
+            <button class="player-btn clip-tab" data-src="/media/live/swimming.mp4" data-poster="/media/live/swimming-poster.jpg">swimming</button>
+            <button class="player-btn clip-tab" data-src="/media/live/chorus.mp4" data-poster="/media/live/chorus-poster.jpg">chorus</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Book of Hours (album) -->
+    <section id="bookofhours-panel" class="station-panel stage" aria-label="Book of Hours">
+      <div class="win-window" data-drag data-fly="left" style="left: 10%; top: 38%; width: 400px;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>book_of_hours.txt</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body">
+          <h2>Book of Hours <span class="year">[upcoming]</span></h2>
+          <p>[album description]</p>
+          <p><i>coming soon</i></p>
+        </div>
+      </div>
+      <div class="win-window" data-drag data-resize data-fly="right" style="right: 12%; top: 34%; width: 300px; --delay: 0.12s;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>book_of_hours.cda</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body media">
+          <div class="media-ph square">album art<br>+ player / pre-save link</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TikTokBox -->
+    <section id="tiktokbox-panel" class="station-panel stage pair" aria-label="TikTokBox"
+             style="--txt-w: min(30vw, 380px); --vid-w: min(46vw, 640px);">
+      <!-- installation photo, BEHIND the top-left corner of tiktokbox.txt (it comes first
+           in the section, so the windows sit in front). Move with left/top, size with width, tilt with rotate. -->
+      <img class="float-img photo" src="/media/tiktokbox/tiktokbox-still.jpg"
+           alt="TikTokBox: Mac performing at a table inside a metal-frame cube, between two tall glowing vertical screens, with the audience seated in the dark"
+           data-drag data-fly="up" draggable="false"
+           style="left: calc(var(--pair-left) - 130px); top: calc(42% - 210px); width: min(28vw, 380px); rotate: -4deg; --delay: 0.05s;">
+
+      <div class="win-window pair-txt" data-drag data-fly="left" style="top: 42%;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>tiktokbox.txt</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body">
+          <h2>TikTokBox <span class="year">[2022/2024]</span></h2>
+          <p>a live improvised performance that turns my TikTok For You Page into a well of audiovisual material. custom Max/MSP/Jitter patches distort my phone’s live feed across two ten-foot screens and a 13-channel spatial audio array, while a motion-sensing Arduino bodysuit lets my whole body, not just my scrolling thumb, play the feed. a duet between a user and their feed: the individual and the collective, the conscious and the subconscious.</p>
+          <!-- works lines: <i>Title</i> (Year), medium, site — one per line, joined with <br> -->
+          <p class="details"><i>TikTokBox</i> [2024], live audiovisual performance, <a href="https://hop.dartmouth.edu/events/mac-waters" target="_blank" rel="noopener">Dartmouth College New Music Festival</a>, Hanover, NH</p>
+        </div>
+      </div>
+      <!-- Performance excerpts: one window, a button per excerpt (add/remove buttons freely).
+           Files live in public/media/tiktokbox/ -->
+      <div class="win-window pair-vid" data-drag data-resize data-fly="right" style="top: 30%; --delay: 0.12s;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>tiktokbox.mp4</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body media clips" data-clips>
+          <video src="/media/tiktokbox/part-1.mp4" poster="/media/tiktokbox/part-1-poster.jpg"
+                 muted loop playsinline preload="none" data-sound-group="tiktokbox"
+                 aria-label="TikTokBox performance (excerpt)"></video>
+          <div class="clip-tabs" role="group" aria-label="choose an excerpt">
+            <button class="player-btn clip-tab active" data-src="/media/tiktokbox/part-1.mp4" data-poster="/media/tiktokbox/part-1-poster.jpg">excerpt 1</button>
+            <button class="player-btn clip-tab" data-src="/media/tiktokbox/part-2.mp4" data-poster="/media/tiktokbox/part-2-poster.jpg">excerpt 2</button>
+            <button class="player-btn clip-tab" data-src="/media/tiktokbox/part-3.mp4" data-poster="/media/tiktokbox/part-3-poster.jpg">excerpt 3</button>
+            <button class="player-btn clip-tab" data-src="/media/tiktokbox/part-4.mp4" data-poster="/media/tiktokbox/part-4-poster.jpg">excerpt 4</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- the "TIK TOK BOX / ENTER HERE" sign (transparent, so no photo border), taped over
+           the top-right corner of tiktokbox.mp4 (222px in from the video's right edge, 158px above its top). Move with left/top, size with width, tilt with rotate. -->
+      <img class="float-img" src="/media/tiktokbox/tiktokbox-sign.webp"
+           alt="a handmade paper sign taped up at the venue: TIK TOK BOX, ENTER HERE, around a cross of glitched images"
+           data-drag data-fly="up" draggable="false"
+           style="left: calc(var(--pair-left) + var(--txt-w) + var(--gap) + var(--vid-w) - 222px); top: calc(30% - 158px); width: min(14vw, 190px); rotate: 3deg; --delay: 0.3s;">
+    </section>
+
+    <!-- soloviolarecital -->
+    <section id="violarecital-panel" class="station-panel stage pair" aria-label="soloviolarecital"
+             style="--txt-w: min(30vw, 400px); --vid-w: min(36vw, 480px);">
+      <div class="win-window pair-txt" data-drag data-fly="left" style="top: 40%;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>soloviolarecital.txt</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body">
+          <h2>soloviolarecital <span class="year">[2024]</span></h2>
+          <p>a freely improvised viola solo, captured by a 16-camera OptiTrack motion capture system, becomes the animation for an avatar on a virtual soundstage. as the improvisation builds and the camera closes in, the digital underbelly surfaces: textures dissolve to a grey humanoid model, the skeleton pokes through, fingers fall out of sync, the bow pierces the instrument. then the sound stops, and the video snaps to the real me, making eye contact with the camera.</p>
+          <!-- works lines: <i>Title</i> (Year), medium, site — one per line, joined with <br> -->
+          <p class="details"><i>soloviolarecital</i> [2024], motion capture video, DREAM Studio, Dartmouth College</p>
+        </div>
+      </div>
+      <div class="win-window pair-vid" data-drag data-resize data-fly="right" style="top: 35%; --delay: 0.12s;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>soloviolarecital.mp4</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body media">
+          <video src="/media/violarecital/soloviolarecital.mp4" poster="/media/violarecital/soloviolarecital-poster.jpg"
+                 muted loop playsinline preload="none" data-sound-group="violarecital" data-fs-restart
+                 aria-label="soloviolarecital (full video)"></video>
+        </div>
+      </div>
+    </section>
+
+    <!-- SHOKWII -->
+    <section id="shokwii-panel" class="station-panel stage pair" aria-label="SHOKWII"
+             style="--txt-w: min(30vw, 400px); --vid-w: min(34vw, 440px);">
+      <div class="win-window pair-txt" data-drag data-fly="left" style="top: 38%;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>SHOKWII.txt</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body">
+          <h2>SHOKWII <span class="year">[2023]</span></h2>
+          <p>locked behind a decade-old password is an archive of videos made by a hyperactive ten-year-old with an internet connection and a webcam: Shokwii101, the YouTube channel I hosted in 2010. SHOKWII collages, distorts, and remixes that archive, using YouTube itself as an instrument.</p>
+          <!-- works lines: <i>Title</i> (Year), medium, site — one per line, joined with <br> -->
+          <p class="details"><i>SHOKWII</i> [2023], film (20 min), (A)TEMPORALITIES showcase, Hanover, NH</p>
+        </div>
+      </div>
+      <div class="win-window pair-vid" data-drag data-resize data-fly="right" style="top: 36%; --delay: 0.12s;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>SHOKWII.mp4</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body media">
+          <video src="/media/shokwii/shokwii-excerpt.mp4" poster="/media/shokwii/shokwii-excerpt-poster.jpg"
+                 muted loop playsinline preload="none" data-sound-group="shokwii" aria-label="SHOKWII (excerpt)"></video>
+        </div>
+      </div>
+    </section>
+
+    <!-- Film Scoring: a reel + a credits list -->
+    <section id="filmscoring-panel" class="station-panel stage" aria-label="Film Scoring">
+      <div class="win-window" data-drag data-resize data-fly="left" style="left: 8%; top: 34%; width: min(42vw, 560px);">
+        <div class="win-titlebar" data-drag-handle>
+          <span>scoring_reel.mp4</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body media">
+          <div class="media-ph">scoring reel<br>public/media/for-others/scoring/</div>
+        </div>
+      </div>
+      <div class="win-window" data-drag data-fly="right" style="right: 8%; top: 38%; width: 360px; --delay: 0.12s;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>credits.txt</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body">
+          <h2>Film Scoring</h2>
+          <!-- credits: <i>Title</i> (Year), medium, dir./prod. Name, site — newest first -->
+          <ul class="works-list">
+            <li><i>Ten Seconds</i> [2027, forthcoming], short film, prod. Jay MacNamee (formerly <i>Do I Look Like Your Wife?</i>)</li>
+            <li><i>PIG</i> [forthcoming], film, dir. Kaley Mamo</li>
+            <li><i>Old Man River</i> [2026], short documentary, dir. Iyabo Kwayana, world premiere, <a href="https://blackstarprojects.org/festival/2026/films/old-man-river" target="_blank" rel="noopener">BlackStar Film Festival</a>, Philadelphia, PA</li>
+            <li><i>Sankyo Stream</i> [2019–2022], experimental web series, dir. Fergus Campbell, music for two episodes, <a href="https://gamethefinch.com/sankyo-stream" target="_blank" rel="noopener">gamethefinch.com</a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Concert Music: description + works list (left), and the scores book + playlist as one overlapping unit (right) -->
+    <section id="composition-panel" class="station-panel stage pair" aria-label="Concert Music"
+             style="--txt-w: min(32vw, 420px); --vid-w: min(36vw, 460px);">
+      <div class="win-window pair-txt" data-drag data-fly="left" style="top: 30%;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>concert_music.txt</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body">
+          <h2>Concert Music</h2>
+          <p>my scored concert works are playful, theatrical compositions that often provide spaces for sonic exploration between improvisation and strict notation, between electronic and acoustic sound worlds. I find myself interested in sonic memory, genre & pastiche, and underlying assumptions re: traditional classical performance practice.</p>
+          <!-- works lines: <i>Title</i> [Year], instrumentation, performers — one per line, joined with <br><br> -->
+          <p class="details"><i>pop song</i> [2022], solo piano and electronics, performed by Conrad Tao<br><br>
+          <i>Justin Bieber — Baby (remix)</i> [2019], trombone, french horn, percussion, and electronics, performed by Ian Antonio, Weston Olencki, and Laura Weiner (members of the Wet Ink Large Ensemble)<br><br>
+          <i>erosion as a form of creation</i> [2019], soprano, flute, bass clarinet, cello, and piano, performed by Fonema Consort</p>
+        </div>
+      </div>
+
+      <!-- SCORE BOOK: one <li> per piece.
+           data-folder = folder holding that piece's page images, named p01.jpg, p02.jpg, p03.jpg …
+           data-pages  = how many pages
+           data-pdf    = (optional) the full score PDF, for the "open pdf" link
+           data-ext    = (optional) png instead of jpg
+           data-orientation="landscape" = wide pages, shown one at a time -->
+      <div class="win-window pair-vid" data-drag data-resize data-fly="right" style="top: 48%; --delay: 0.1s;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>scores.book</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body media book" data-scorebook>
+          <div class="book-toolbar">
+            <select class="book-select" aria-label="choose a score"></select>
+            <a class="book-pdf" href="#" target="_blank" rel="noopener">open pdf ↗</a>
+          </div>
+          <div class="book-spread"></div>
+          <div class="book-nav">
+            <button class="player-btn" data-act="prev" aria-label="previous page">◀</button>
+            <span class="book-count">p. 1</span>
+            <button class="player-btn" data-act="next" aria-label="next page">▶</button>
+          </div>
+          <ul class="book-scores" hidden>
+            <li data-title="pop song [2022]" data-folder="/media/composition/scores/pop-song/" data-pages="12" data-orientation="landscape" data-pdf="/media/composition/scores/pop-song/score.pdf"></li>
+            <li data-title="Justin Bieber — Baby (remix) [2019]" data-folder="/media/composition/scores/baby-remix/" data-pages="15" data-pdf="/media/composition/scores/baby-remix/score.pdf"></li>
+            <li data-title="erosion as a form of creation [2019]" data-folder="/media/composition/scores/erosion/" data-pages="30" data-orientation="landscape" data-pdf="/media/composition/scores/erosion/score.pdf"></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- PLAYLIST: stacked above scores.book, nudged 70px to the right of the book's left edge.
+           One <li> per recording. data-src = the audio file (mp3) in public/media/composition/audio/ -->
+      <div class="win-window" data-drag data-fly="up" style="left: calc(var(--pair-left) + var(--txt-w) + var(--gap) + 70px); top: 23%; width: 340px; --delay: 0.22s;">
+        <div class="win-titlebar" data-drag-handle>
+          <span>playlist.exe</span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body media player" data-player>
+          <div class="player-display">
+            <span class="player-now">press ▶ to play</span>
+            <span class="player-time">0:00</span>
+          </div>
+          <div class="player-progress" role="slider" aria-label="seek" tabindex="0"><div class="player-bar"></div></div>
+          <div class="player-controls">
+            <button class="player-btn" data-act="prev" aria-label="previous track">⏮</button>
+            <button class="player-btn" data-act="play" aria-label="play / pause">▶</button>
+            <button class="player-btn" data-act="next" aria-label="next track">⏭</button>
+          </div>
+          <ol class="player-list">
+            <li data-src="/media/composition/audio/pop-song.mp3">pop song — Conrad Tao</li>
+            <li data-src="/media/composition/audio/baby-remix.mp3">Justin Bieber — Baby (remix) — Wet Ink Large Ensemble</li>
+            <li data-src="/media/composition/audio/erosion.mp3">erosion as a form of creation — Fonema Consort</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Start menu (opens from the taskbar's start button) -->
+    <nav id="start-menu" class="win-window" aria-label="site menu" hidden>
+      <div class="sm-banner" aria-hidden="true">mac waters</div>
+      <ul>
+        <li><button data-nav="home"><span aria-hidden="true">🏰</span> castle</button></li>
+        <li><button data-nav="about"><span aria-hidden="true">🌹</span> about</button></li>
+        <!-- "work" opens the desktop; hover it (or tap ▸) for the cascading project list -->
+        <li class="sm-has-sub">
+          <button data-nav="work"><span aria-hidden="true">💿</span> work</button>
+          <button class="sm-arrow" aria-label="show projects" aria-expanded="false">&#9656;</button>
+          <ul class="sm-submenu win-window">
+            <li><button data-nav="dreamvisions"><span aria-hidden="true">👁️</span> DreamVisions+</button></li>
+            <li><button data-nav="meditations"><span aria-hidden="true">🧘</span> GUIDED_MEDITATIONS</button></li>
+            <li><button data-nav="live"><span aria-hidden="true">🎤</span> LIVE.exe</button></li>
+            <li><button data-nav="bookofhours"><span aria-hidden="true">📖</span> Book of Hours</button></li>
+            <li><button data-nav="tiktokbox"><span aria-hidden="true">📺</span> TikTokBox</button></li>
+            <li><button data-nav="violarecital"><span aria-hidden="true">🎻</span> soloviolarecital</button></li>
+            <li><button data-nav="shokwii"><span aria-hidden="true">💾</span> SHOKWII</button></li>
+            <li><button data-nav="filmscoring"><span aria-hidden="true">🎬</span> Film Scoring</button></li>
+            <li><button data-nav="composition"><span aria-hidden="true">🎼</span> Concert Music</button></li>
+          </ul>
+        </li>
+        <li class="sm-divider" role="separator"></li>
+        <li><button data-nav="contact"><span aria-hidden="true">✉️</span> contact</button></li>
+      </ul>
+    </nav>
+
+    <!-- Taskbar (replaces the old marquee) -->
+    <div id="taskbar">
+      <button class="tb-start" aria-haspopup="true" aria-expanded="false" aria-controls="start-menu">
+        <img src="/images/rose_head_favicon.png" alt="" width="16" height="16"> start
+      </button>
+      <div class="tb-tasks"></div>
+      <div class="tb-tray">
+        <span class="tray-castle" title="Dream. Share. Connect." aria-label="Dream. Share. Connect.">🏰</span>
+        <span class="tb-clock"></span>
+      </div>
+    </div>
+
+    <!-- Gives the page its scroll length; main.js sets the height -->
+    <div id="scroll-spacer"></div>
 
   </body>
 </html>
