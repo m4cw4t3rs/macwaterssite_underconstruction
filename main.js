@@ -16,9 +16,10 @@ import { initPlayers } from './player.js';
 import { initScoreBooks } from './scorebook.js';
 
 // --- Phone mode ---------------------------------------------------------------
-// On phones the site becomes one long page: a small castle header at the top,
-// then every section stacked underneath (no flying camera, no nav cubes, no
-// taskbar, no dragging). Everything for phones is marked "MOBILE" below, and
+// On phones the site becomes one long page: a landing page with the castle
+// (spin it with a finger), which shrinks into a small header as you scroll, then
+// every section stacked underneath, its windows flying in as they come on screen
+// (no flying camera, no nav cubes, no taskbar window buttons, no dragging). Everything for phones is marked "MOBILE" below, and
 // the phone-only styles live under "html.mobile" at the end of style.css,
 // so the desktop site is untouched.
 const MOBILE_QUERY = window.matchMedia('(max-width: 700px), (pointer: coarse) and (max-height: 500px)');
@@ -69,21 +70,25 @@ const gradientBg = document.createElement('div');
 gradientBg.id = 'gradient-bg';
 document.body.appendChild(gradientBg);
 
-// MOBILE: the 3D canvas lives in a short header box at the top of the page
-// (its height is set in style.css: html.mobile #mobile-hero) and scrolls away.
+// MOBILE: an empty, screen-tall "landing page" box at the top of the page. The
+// castle shows through it; scrolling past it shrinks the castle into the header.
 const mobileHero = MOBILE ? document.createElement('div') : null;
 if (MOBILE) {
   mobileHero.id = 'mobile-hero';
   document.body.prepend(mobileHero);
-  mobileHero.appendChild(renderer.domElement);
-} else {
-  document.body.appendChild(renderer.domElement);
 }
+document.body.appendChild(renderer.domElement);
 
-// The size the main 3D view is drawn at: the whole window, or the phone header box.
+// The size the main 3D view is drawn at: the whole window. (On phones the height
+// only updates when the width changes — i.e. turning the phone — so the castle
+// doesn't jump when the address bar slides away while scrolling.)
+let mobileViewSize = null;
 function viewSize() {
-  if (MOBILE) return { w: mobileHero.clientWidth || window.innerWidth, h: mobileHero.clientHeight || 1 };
-  return { w: window.innerWidth, h: window.innerHeight };
+  if (!MOBILE) return { w: window.innerWidth, h: window.innerHeight };
+  if (!mobileViewSize || mobileViewSize.w !== window.innerWidth) {
+    mobileViewSize = { w: window.innerWidth, h: window.innerHeight };
+  }
+  return mobileViewSize;
 }
 if (MOBILE) {
   const { w, h } = viewSize();
@@ -214,7 +219,10 @@ function updateCameraTarget() {
 let flyingTo = null;
 let flightTimer = null;
 
-function scrollToZone(name) {
+// `glide: true` = a one-stop scroll (paged scrolling): nothing is flown THROUGH, so the
+// stop you're leaving fades out naturally (rose shrinks, windows recede) instead of
+// vanishing at once like it does for a long jump.
+function scrollToZone(name, { glide = false } = {}) {
   const target = ZONE_ALIASES[name] || name;
   if (MOBILE) {
     // phones: just scroll the page to that section (and remember it, so Back returns here)
@@ -231,9 +239,13 @@ function scrollToZone(name) {
   }
   const z = zones.find((zone) => zone.name === target);
   if (!z) return;
-  flyingTo = z;
   clearTimeout(flightTimer);
-  flightTimer = setTimeout(() => { flyingTo = null; }, 4000); // safety net
+  if (glide) {
+    flyingTo = null;
+  } else {
+    flyingTo = z;
+    flightTimer = setTimeout(() => { flyingTo = null; }, 4000); // safety net
+  }
   window.scrollTo({ top: z.start, behavior: 'smooth' });
 }
 
@@ -600,18 +612,33 @@ function titleHeaderY(scale, top = headerTop()) {
   return best;
 }
 
-// MOBILE: the header box is short and wide, so the title is sized to its width.
+// MOBILE: two arrangements of the MACWATERS ring (with the castle inside it).
+// Scrolling down the landing page glides from the first to the second.
+//   fill = the ring's width as a fraction of the screen width
+//   top  = where its top edge sits (1 = top of the screen, 0 = middle)
+//   tilt = how far the castle tips toward you (degrees)
 const TITLE_MOBILE = {
-  fill: 0.8,  // the ring's width as a fraction of the screen width
-  top: 0.82,  // where its top edge sits (1 = top of the header box)
+  landing: { fill: 0.92, top: 0.42, tilt: 8 },  // the landing page: big, centered
+  header:  { fill: 0.5,  top: 0.97, tilt: 22 }, // a small logo pinned at the top
+  scrollToHeader: 0.7, // how much of the landing page you scroll before it's fully a header (1 = all of it)
 };
+let mobileIntro = 0;       // 0 = landing arrangement, 1 = header (eases toward the scroll)
+let mobileIntroTarget = 0;
+const mobileEase = () => THREE.MathUtils.smoothstep(mobileIntro, 0, 1);
+
 function headerScale() {
   if (!MOBILE || !titleBox) return TITLE_HEADER.scale;
-  const halfW = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * TITLE_DISTANCE * camera.aspect;
-  return (2 * halfW * TITLE_MOBILE.fill) / (titleBox.max.x - titleBox.min.x);
+  const tanHalf = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  const halfW = tanHalf * TITLE_DISTANCE * camera.aspect;
+  const halfH = tanHalf * TITLE_DISTANCE;
+  const fill = THREE.MathUtils.lerp(TITLE_MOBILE.landing.fill, TITLE_MOBILE.header.fill, mobileEase());
+  // (on a sideways phone, don't let it get wider than the screen is tall)
+  const width = Math.min(2 * halfW * fill, 2 * halfH * fill * 1.2);
+  return width / (titleBox.max.x - titleBox.min.x);
 }
 function headerTop() {
-  return MOBILE ? TITLE_MOBILE.top : TITLE_HEADER.top;
+  if (!MOBILE) return TITLE_HEADER.top;
+  return THREE.MathUtils.lerp(TITLE_MOBILE.landing.top, TITLE_MOBILE.header.top, mobileEase());
 }
 
 // As you start scrolling, the title rises and the castle sinks back.
@@ -673,7 +700,10 @@ function updateCastle() {
   castleHeaderPos.set(0, targetCY - centerY * s, -TITLE_DISTANCE);
   castleModel.position.lerpVectors(castleHomePos, castleHeaderPos, eased);
   castleModel.scale.setScalar(THREE.MathUtils.lerp(CASTLE_HOME.scale, s, eased));
-  castleModel.rotation.x = THREE.MathUtils.degToRad(CASTLE_HEADER.tilt) * eased;
+  const tilt = MOBILE
+    ? THREE.MathUtils.lerp(TITLE_MOBILE.landing.tilt, TITLE_MOBILE.header.tilt, mobileEase())
+    : CASTLE_HEADER.tilt;
+  castleModel.rotation.x = THREE.MathUtils.degToRad(tilt) * eased;
 }
 
 // =============================================================================
@@ -1009,13 +1039,45 @@ backButton?.addEventListener('click', (e) => {
   scrollToZone('work');
 });
 
-// MOBILE: every section is simply always "visible" (no flying in, no typing out),
-// and "back to desktop" shows once you've scrolled down into the projects.
+// MOBILE: every section is always "visible" (so videos, players etc. work), and
+// each window swoops in as it scrolls onto the screen — from the same side it
+// flies in from on desktop (data-fly), or from below. Its text types itself out
+// the first time. Scroll back up past it and it resets, so it flies in again.
+// "back to desktop" shows once you've scrolled down into the projects.
 const firstProjectPanel = document.getElementById(`${PROJECT_STOPS[0]}-panel`);
 if (MOBILE) {
   stationPanels.forEach(({ el }) => {
     el.classList.add('visible');
     el.dataset.state = 'visible';
+  });
+
+  const typed = new WeakSet();
+  const reveal = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      const el = entry.target;
+      const enough = entry.intersectionRatio >= 0.12 || entry.intersectionRect.height > window.innerHeight * 0.3;
+      if (entry.isIntersecting && enough) {
+        el.classList.add('in-view');
+        if (!typed.has(el)) {
+          typed.add(el);
+          el.querySelectorAll('.win-body:not(.media)').forEach((body) => typeIn(body, 0.2));
+        }
+      } else if (!entry.isIntersecting && entry.boundingClientRect.top > 0) {
+        el.classList.remove('in-view'); // it's below the screen again → ready to fly in again
+      }
+    });
+  }, { threshold: [0, 0.12, 0.3] });
+
+  document.querySelectorAll('.station-panel > *, #work-panel .desk-icon').forEach((el) => {
+    if (el.classList.contains('desktop')) return; // its icons animate one by one instead
+    if (!el.dataset.fly) {
+      el.dataset.fly = el.classList.contains('about-window') ? 'left'
+        : el.classList.contains('news-window') ? 'right'
+        : el.id === 'rose-slot' ? 'zoom'
+        : 'up';
+    }
+    el.classList.add('reveal');
+    reveal.observe(el);
   });
 }
 function updateMobileBackButton() {
@@ -1082,6 +1144,29 @@ window.addEventListener('mousemove', (e) => {
 window.addEventListener('mouseup', () => {
   isDragging = false;
 });
+
+// MOBILE: spin the castle with a finger — swipe sideways to spin, swipe up/down
+// still scrolls the page (style.css sets touch-action: pan-y on the canvas).
+if (MOBILE) {
+  const canvas = renderer.domElement;
+  let touchX = null;
+  canvas.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse') return; // (the mouse version is above)
+    touchX = e.clientX;
+    isDragging = true;
+    spinVelocity = 0;
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    if (touchX === null || !castleModel) return;
+    const deltaX = e.clientX - touchX;
+    castleModel.rotation.y += deltaX * 0.012;
+    spinVelocity = deltaX * 0.012;
+    touchX = e.clientX;
+  });
+  const endTouch = () => { touchX = null; isDragging = false; };
+  canvas.addEventListener('pointerup', endTouch);
+  canvas.addEventListener('pointercancel', endTouch); // the phone decided it's a scroll
+}
 
 // =============================================================================
 // HUD nav cubes — small, spinning, pinned to the screen
@@ -1286,6 +1371,10 @@ window.addEventListener('click', (e) => {
 const scrollHint = document.getElementById('scroll-hint');
 
 function onScroll() {
+  if (MOBILE) {
+    const landing = mobileHero.offsetHeight * TITLE_MOBILE.scrollToHeader || 1;
+    mobileIntroTarget = THREE.MathUtils.clamp(window.scrollY / landing, 0, 1);
+  }
   updateCameraTarget();
   updateIntroMotion();
   if (scrollHint) scrollHint.classList.toggle('hidden', window.scrollY > 40);
@@ -1323,7 +1412,7 @@ if (!MOBILE && SCROLL_MODE === 'paged') {
     if (Math.abs(zones[i].start - window.scrollY) < 2) return;
     lockedAt = performance.now();
     lockTarget = zones[i].start;
-    scrollToZone(zones[i].name);
+    scrollToZone(zones[i].name, { glide: true });
   };
 
   // can this element (or a parent window body) scroll further in this direction itself?
@@ -1389,7 +1478,7 @@ if (!MOBILE && SCROLL_MODE === 'paged') {
     settleTimer = setTimeout(() => {
       if (flyingTo) return;
       const z = zones[currentIndex()];
-      if (Math.abs(z.start - window.scrollY) > 2) scrollToZone(z.name);
+      if (Math.abs(z.start - window.scrollY) > 2) scrollToZone(z.name, { glide: true });
     }, 220);
   }, { passive: true });
 }
@@ -1411,21 +1500,27 @@ window.addEventListener('resize', () => {
 const growTarget = new THREE.Vector3();
 const clock = new THREE.Clock();
 
-// MOBILE: only draw each 3D view while it's on screen (saves battery).
-let heroOnScreen = true;
-if (MOBILE) {
-  new IntersectionObserver(([entry]) => { heroOnScreen = entry.isIntersecting; }).observe(mobileHero);
-}
-
 function animateMobile(t) {
+  // the landing → header glide eases along behind the scroll
+  mobileIntro += (mobileIntroTarget - mobileIntro) * 0.12;
+  if (Math.abs(mobileIntroTarget - mobileIntro) < 0.0005) mobileIntro = mobileIntroTarget;
+  updateIntroMotion();
+
   if (titleMesh) titleMesh.rotation.y -= 0.001;
   updateCastle();
   updateAbout(t);
   updateStations();
-  if (heroOnScreen) {
-    renderer.clear();
-    renderer.render(scene, camera);
+
+  // castle keeps spinning a little after your finger lets go
+  if (castleModel && !isDragging) {
+    castleModel.rotation.y += spinVelocity;
+    spinVelocity *= 0.95;
+    if (Math.abs(spinVelocity) < 0.0001) spinVelocity = 0;
   }
+
+  renderer.clear();
+  renderer.render(scene, camera);
+  // the rose only draws while its spot in the about section is on screen (saves battery)
   if (roseView?.onScreen) roseView.renderer.render(roseView.scene, roseView.camera);
 }
 

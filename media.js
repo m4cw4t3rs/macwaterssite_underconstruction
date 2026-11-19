@@ -51,6 +51,75 @@ export function initMedia() {
     sync();
   });
 
+  // --- Window videos: sound tag + full-screen button ---
+  // Every video in a window plays silently on its own (hover for sound). The ⛶
+  // button in the title bar opens it full screen WITH sound and the usual player
+  // controls (scrub, pause…). Leaving full screen puts it back to the silent loop.
+  // <video data-fs-restart> = start from the beginning when opened full screen.
+  const isFullscreen = (v) =>
+    document.fullscreenElement === v || document.webkitFullscreenElement === v || v.webkitDisplayingFullscreen;
+  let fsVideo = null;
+
+  document.querySelectorAll('.win-window .win-body.media video').forEach((video) => {
+    const win = video.closest('.win-window');
+    const titlebar = win.querySelector('.win-titlebar');
+    const closeBtn = titlebar?.querySelector('[data-close]');
+
+    // the 🔇/🔊 tag in the title bar and the "hover for sound" tag (added if index.html doesn't have them)
+    if (video.dataset.soundGroup && titlebar && !titlebar.querySelector('.sound-badge')) {
+      const badge = document.createElement('span');
+      badge.className = 'sound-badge';
+      badge.setAttribute('aria-hidden', 'true');
+      badge.textContent = '🔇';
+      titlebar.insertBefore(badge, closeBtn);
+    }
+    if (video.dataset.soundGroup && !video.parentElement.querySelector('.sound-hint')) {
+      const hint = document.createElement('div');
+      hint.className = 'sound-hint';
+      hint.setAttribute('aria-hidden', 'true');
+      hint.innerHTML = '<span class="hint-before">🔈 click for sound</span>' +
+        '<span class="hint-hover">🔈 hover for sound</span><span class="hint-tap">🔈 tap for sound</span>';
+      video.after(hint);
+    }
+
+    if (!titlebar) return;
+    const fs = document.createElement('button');
+    fs.className = 'win-btn win-fs';
+    fs.type = 'button';
+    fs.title = 'full screen';
+    fs.setAttribute('aria-label', 'watch full screen');
+    fs.textContent = '⛶';
+    titlebar.insertBefore(fs, closeBtn);
+
+    fs.addEventListener('click', () => {
+      allowSound();
+      if (video.hasAttribute('data-fs-restart')) video.currentTime = 0;
+      fsVideo = video;
+      video.controls = true;
+      setMuted(video, false);
+      video.play().catch(() => {});
+      const open = video.requestFullscreen || video.webkitRequestFullscreen;
+      try {
+        if (open) open.call(video)?.catch?.(() => {});
+        else video.webkitEnterFullscreen?.();
+      } catch { video.webkitEnterFullscreen?.(); }
+    });
+  });
+
+  // back from full screen → silent loop again (unless the mouse is still over the window)
+  const leftFullscreen = () => {
+    const v = fsVideo;
+    if (!v || isFullscreen(v)) return;
+    fsVideo = null;
+    v.controls = false;
+    const win = v.closest('.win-window');
+    if (!win?.matches(':hover')) setMuted(v, true);
+    if (v.paused && v.closest('.station-panel')?.classList.contains('visible')) v.play().catch(() => {});
+  };
+  document.addEventListener('fullscreenchange', leftFullscreen);
+  document.addEventListener('webkitfullscreenchange', leftFullscreen);
+  document.querySelectorAll('video').forEach((v) => v.addEventListener('webkitendfullscreen', leftFullscreen));
+
   // --- Only one sound at a time ---
   // A video with sound starting → tell the music player (and other videos) to hush.
   document.querySelectorAll('video').forEach((v) => {
@@ -105,6 +174,7 @@ export function initMedia() {
     };
 
     video.addEventListener('click', () => {
+      if (isFullscreen(video)) return; // full screen: the player's own controls handle clicks
       // still silent (first click, or a phone tap) → turn the sound on first
       if (video.muted) {
         setMuted(video, false);
@@ -136,12 +206,13 @@ export function initMedia() {
         if (e.pointerType === 'mouse') solo(video);
       });
       win.addEventListener('pointerleave', (e) => {
-        if (e.pointerType === 'mouse') setMuted(video, true);
+        if (e.pointerType === 'mouse' && !isFullscreen(video) && fsVideo !== video) setMuted(video, true);
       });
       // Click / tap: toggle this video's sound (this also counts as the
       // visitor's first click, so it works right away).
       video.addEventListener('click', () => {
         allowSound();
+        if (isFullscreen(video)) return; // full screen: the player's own controls handle clicks
         if (video.hasAttribute('data-cycle')) return; // handled below (click = skip)
         if (video.muted) solo(video);
         else setMuted(video, true);

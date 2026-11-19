@@ -3,6 +3,11 @@ html, body {
   padding: 0;
 }
 
+/* index.html hides the page until this file has loaded (no flash of unstyled windows) */
+body {
+  visibility: visible;
+}
+
 /* anything marked hidden (e.g. a hidden project's icon) stays hidden, whatever its own style says */
 [hidden] {
   display: none !important;
@@ -902,6 +907,19 @@ body.sound-ok .sound-hint .hint-hover { display: inline; }
   opacity: 0.85;
 }
 
+/* ⛶ full-screen button in video windows' title bars (added by media.js) */
+.win-fs {
+  font-size: 12px;
+  line-height: 1;
+  margin-right: 2px;
+}
+
+/* clip switcher (DreamVisions+): the sound tag sits at the top, clear of the clip buttons */
+.win-body.media.clips .sound-hint {
+  top: 6px;
+  bottom: auto;
+}
+
 .cycle-count {
   margin-left: 6px;
   opacity: 0.75;
@@ -1371,7 +1389,6 @@ html.mobile body {
 /* gone on phones: nav cubes, the taskbar's window buttons, "scroll" hint, window buttons */
 html.mobile #nav-labels,
 html.mobile #taskbar .tb-tasks,
-html.mobile #scroll-hint,
 html.mobile .win-titlebar .win-btn,
 html.mobile .win-titlebar .win-buttons,
 html.mobile .size-grip,
@@ -1380,19 +1397,44 @@ html.mobile .sound-badge {
   display: none !important;
 }
 
-/* the castle + MACWATERS ring: a short header at the top that scrolls away */
+/* LANDING PAGE: an empty, screen-tall space at the top. The castle (on the 3D
+   canvas behind it) shows through; scrolling past it shrinks the castle up into
+   a small MACWATERS header that stays at the top (sizes: TITLE_MOBILE in main.js). */
 html.mobile #mobile-hero {
-  position: relative;
-  z-index: 2;
-  height: 30vh;
-  height: 30svh; /* HEADER HEIGHT on phones (svh = doesn't jump when the address bar hides) */
+  height: 100vh;
+  height: 100svh; /* svh = the screen height with the address bar showing */
+  pointer-events: none; /* touches go through to the castle, so it can be spun */
 }
 
+/* swipe sideways on the castle to spin it; swipe up/down still scrolls */
 html.mobile #three-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100% !important;
-  height: 100% !important;
+  touch-action: pan-y;
+}
+
+/* "scroll ↓" sits above the taskbar on phones */
+html.mobile #scroll-hint {
+  bottom: calc(52px + env(safe-area-inset-bottom, 0px));
+}
+
+/* WINDOWS FLYING IN as you scroll (main.js adds .reveal, then .in-view when it's on screen).
+   Directions come from data-fly, like on desktop. */
+html.mobile .reveal {
+  transition:
+    translate 0.7s cubic-bezier(0.2, 1.25, 0.4, 1) var(--delay, 0s),
+    scale 0.7s cubic-bezier(0.2, 1.25, 0.4, 1) var(--delay, 0s),
+    opacity 0.4s ease-out var(--delay, 0s) !important;
+}
+
+html.mobile .reveal:not(.in-view) { opacity: 0 !important; }
+html.mobile .reveal[data-fly="left"]:not(.in-view)  { translate: -110vw 0; }
+html.mobile .reveal[data-fly="right"]:not(.in-view) { translate: 110vw 0; }
+html.mobile .reveal[data-fly="up"]:not(.in-view)    { translate: 0 120px; }
+html.mobile .reveal[data-fly="down"]:not(.in-view)  { translate: 0 -120px; }
+html.mobile .reveal[data-fly="zoom"]:not(.in-view)  { scale: 0.3; }
+
+@media (prefers-reduced-motion: reduce) {
+  html.mobile .reveal { transition: none !important; }
+  html.mobile .reveal:not(.in-view) { translate: none; scale: none; opacity: 1 !important; }
 }
 
 /* each section: a plain column of windows, one under another */
@@ -1414,7 +1456,7 @@ html.mobile body .station-panel {
   visibility: visible;
   pointer-events: auto;
   transition: none;
-  scroll-margin-top: 16px;
+  scroll-margin-top: 18vh; /* jumping to a section lands just below the MACWATERS header */
 }
 
 html.mobile body .station-panel > * {
@@ -1425,9 +1467,9 @@ html.mobile body .station-panel > * {
   margin: 0;
   box-sizing: border-box;
   transform: none !important;
-  transition: none !important;
+  transition: none;
   filter: none !important;
-  opacity: 1 !important;
+  opacity: 1;
   pointer-events: auto;
   z-index: auto;
 }

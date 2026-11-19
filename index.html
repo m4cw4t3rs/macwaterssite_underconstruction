@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MAC WATERS 🏰 · multimedia composer-performer</title>
     <meta name="description" content="mac waters is a multimedia composer, violist, and improviser based in vermont, working across concert music, installation, film, XR, and game design." />
+    <!-- Keep the page blank until style.css has loaded (style.css turns it back on).
+         Without this, Safari can paint every window unstyled for a split second. -->
+    <style>body { visibility: hidden; }</style>
     <!-- Space Mono (body font) from Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -211,7 +214,7 @@
         </div>
         <div class="win-body media clips" data-clips>
           <video src="/media/dreamvisions/performance/garden.mp4" poster="/media/dreamvisions/performance/garden-poster.jpg"
-                 controls playsinline preload="none" aria-label="DreamVisions+ excerpt"></video>
+                 muted loop playsinline preload="none" data-sound-group="dreamvisions" aria-label="DreamVisions+ excerpt"></video>
           <div class="clip-tabs" role="group" aria-label="choose an excerpt">
             <button class="player-btn clip-tab active" data-src="/media/dreamvisions/performance/garden.mp4" data-poster="/media/dreamvisions/performance/garden-poster.jpg">garden</button>
             <button class="player-btn clip-tab" data-src="/media/dreamvisions/performance/violaimprov.mp4" data-poster="/media/dreamvisions/performance/violaimprov-poster.jpg">viola</button>
@@ -303,16 +306,16 @@
           <button class="win-btn" data-close aria-label="close this window">&times;</button>
         </div>
         <div class="win-body">
-          <h2>LIVE.exe <span class="year">[year]</span></h2>
+          <h2>LIVE.exe <span class="year">[ongoinmg]</span></h2>
           <p>electroacoustic solo sets featuring amplified viola & voice with synthesizers, performed with ableton push</p>
           <!-- works lines: <i>Title</i> (Year), medium, site — one per line, joined with <br> -->
-          <p class="details"><i></i> august 2025, solo live set, main street museum, white river junction, vt</p>
+          <p class="details"> august 2025, solo live set, main street museum, white river junction, vt</p>
         </div>
       </div>
 
       <!-- The performance video. When it's ready, replace the placeholder with:
            <video src="/media/live/live-set.mp4" poster="/media/live/live-set-poster.jpg"
-                  controls playsinline preload="none" aria-label="live solo set"></video> -->
+                  muted loop playsinline preload="none" data-sound-group="live" aria-label="live solo set"></video> -->
       <div class="win-window pair-vid" data-drag data-resize data-fly="right" style="top: 30%; --delay: 0.12s;">
         <div class="win-titlebar" data-drag-handle>
           <span>live_set.mp4</span>
@@ -422,7 +425,9 @@
           <button class="win-btn" data-close aria-label="close this window">&times;</button>
         </div>
         <div class="win-body media">
-          <div class="media-ph">recital video<br>public/media/violarecital/</div>
+          <video src="/media/violarecital/soloviolarecital.mp4" poster="/media/violarecital/soloviolarecital-poster.jpg"
+                 muted loop playsinline preload="none" data-sound-group="violarecital" data-fs-restart
+                 aria-label="soloviolarecital (full video)"></video>
         </div>
       </div>
     </section>
@@ -448,7 +453,8 @@
           <button class="win-btn" data-close aria-label="close this window">&times;</button>
         </div>
         <div class="win-body media">
-          <div class="media-ph">video / images<br>public/media/shokwii/</div>
+          <video src="/media/shokwii/shokwii-excerpt.mp4" poster="/media/shokwii/shokwii-excerpt-poster.jpg"
+                 muted loop playsinline preload="none" data-sound-group="shokwii" aria-label="SHOKWII (excerpt)"></video>
         </div>
       </div>
     </section>
