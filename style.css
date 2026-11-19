@@ -530,6 +530,38 @@ button.win-btn:active {
   transition: transform 0.7s cubic-bezier(0.2, 1.25, 0.4, 1) 0.25s;
 }
 
+/* past.txt: opens (from the "past shows ↗" link) cascaded a little down and to the
+   right of upcoming.txt, like a newly opened window. top = how far down, left = how far right. */
+.past-window[data-drag] {
+  top: 175px;
+  left: calc(100% + 60px);
+}
+
+.past-window.pop {
+  animation: window-pop 0.22s ease-out;
+}
+
+@keyframes window-pop {
+  from { transform: scale(0.85); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+
+/* "past shows ↗" — a button that looks like a link */
+.past-link {
+  margin: 0.7em 0 0;
+  text-align: right;
+}
+
+.link-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #0000ee;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .station-panel.visible .news-window {
   transform: none;
 }
@@ -552,6 +584,11 @@ button.win-btn:active {
 .stage .win-body:not(.media) {
   max-height: 52vh;
   overflow-y: auto;
+}
+
+/* scrolling to the end of a text box never carries on into scrolling the page */
+.win-body {
+  overscroll-behavior: contain;
 }
 
 /* the small facts line under a project description (premiere, venue, tech) */
@@ -843,7 +880,8 @@ button.win-btn:active {
 
 /* skip-through videos keep a fixed shape, so the window doesn't shrink for a
    moment while the next section loads (all TikTokBox sections are 16:9) */
-.win-body.media video[data-cycle] {
+.win-body.media video[data-cycle],
+.win-body.media.clips video {
   display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -1356,6 +1394,7 @@ body.sound-ok .sound-hint .hint-hover { display: inline; }
     width: auto;
     max-width: 80%;
   }
+
 
   .about-photo.no-photo figcaption {
     height: 130px;

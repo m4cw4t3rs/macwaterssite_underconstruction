@@ -1,6 +1,6 @@
 // taskbar.js — a 90s-style taskbar along the bottom of the screen.
 //
-//  [ start ]  [ about_mac.txt ] [ upcoming.txt ]            🚧 3:14 PM
+//  [ start ]  [ about_mac.txt ] [ upcoming.txt ]            🏰 3:14 PM
 //
 // - Start opens a little menu of links (castle / about / work / contact).
 // - The middle shows one button per window at the current stop

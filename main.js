@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-import { initDraggables } from './drag.js';
+import { initDraggables, bringToFront } from './drag.js';
 import { initTaskbar } from './taskbar.js';
 import { initMedia } from './media.js';
 import { typeIn, cancelTypeIn } from './typewriter.js';
@@ -140,7 +140,7 @@ const ZONE_DEFS = ALL_ZONES
   .map((z, i) => ({ ...z, start: i * STOP_SPACING.start, cameraZ: ALL_ZONES[0].cameraZ + i * STOP_SPACING.cameraZ }));
 
 // Hidden stops: their Start-menu items and windows disappear, but their desktop
-// icons stay as "coming soon" (🚧 badge, a note in the hover preview, no click-through).
+// icons stay as "coming soon" (a note in the hover preview, no click-through).
 const COMING_SOON_NOTE = '[page under construction, coming soon]';
 HIDDEN_STOPS.forEach((name) => {
   document.querySelectorAll(`[data-nav="${name}"]`).forEach((el) => {
@@ -217,6 +217,7 @@ function updateCameraTarget() {
 // While flying to a stop via a link (cube, icon, menu), the stops you fly
 // THROUGH stay hidden — only the destination shows itself.
 let flyingTo = null;
+let frozenStop = null; // a full-screen video is open on this stop (see 'Full-screen video' below)
 let flightTimer = null;
 
 // `glide: true` = a one-stop scroll (paged scrolling): nothing is flown THROUGH, so the
@@ -293,7 +294,7 @@ function stopFromHash() {
 // Called every frame: once you've settled on a new stop, record it.
 function updateHistory() {
   if (MOBILE) return;   // phones handle this in scrollToZone
-  if (flyingTo) return; // wait until a flight lands
+  if (flyingTo || frozenStop) return; // wait until a flight lands
   const here = zones.find((z) =>
     Math.abs(window.scrollY - z.start) < 2 && Math.abs(camera.position.z - z.cameraZ) < 1);
   if (!here || here.name === currentStop) return;
@@ -1100,7 +1101,10 @@ function updateStations() {
     const clickedAway = !stopMayShow(name) && el.dataset.state === 'visible';
     const leaving = camZ > cameraZ + LEAVE_DISTANCE || clickedAway || (el.dataset.state === 'receded' && !arrived);
     if (arrived && el.dataset.state !== 'visible') {
-      el.querySelectorAll('.win-window.closed').forEach((w) => w.classList.remove('closed'));
+      // arriving reopens any windows you closed — except ones marked data-start-closed
+      // (like past.txt), which go back to closed until you open them again
+      el.querySelectorAll('.win-window.closed:not([data-start-closed])').forEach((w) => w.classList.remove('closed'));
+      el.querySelectorAll('.win-window[data-start-closed]').forEach((w) => w.classList.add('closed'));
     }
     setPanelState(el, arrived ? 'visible' : leaving ? 'receded' : 'offstage');
   }
@@ -1115,6 +1119,24 @@ document.getElementById('about-close')?.addEventListener('click', () => scrollTo
 // Any × button marked data-close just closes its own window (until reload).
 document.querySelectorAll('[data-close]').forEach((btn) => {
   btn.addEventListener('click', () => btn.closest('.win-window')?.classList.add('closed'));
+});
+
+// A button marked data-open="ID" opens that (closed) window and brings it to the front
+// — e.g. "past shows ↗" in upcoming.txt opens past.txt.
+document.querySelectorAll('[data-open]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const win = document.getElementById(btn.dataset.open);
+    if (!win) return;
+    const wasClosed = win.classList.contains('closed');
+    win.classList.remove('closed');
+    bringToFront(win);
+    if (wasClosed) {
+      win.classList.remove('pop');
+      void win.offsetWidth; // restart the little pop-open animation
+      win.classList.add('pop');
+      win.querySelectorAll('.win-body:not(.media)').forEach((body) => typeIn(body, 0.1));
+    }
+  });
 });
 
 // --- Drag to spin the castle -------------------------------------------------
@@ -1371,6 +1393,7 @@ window.addEventListener('click', (e) => {
 const scrollHint = document.getElementById('scroll-hint');
 
 function onScroll() {
+  if (frozenStop) return; // full-screen video open
   if (MOBILE) {
     const landing = mobileHero.offsetHeight * TITLE_MOBILE.scrollToHeader || 1;
     mobileIntroTarget = THREE.MathUtils.clamp(window.scrollY / landing, 0, 1);
@@ -1415,24 +1438,30 @@ if (!MOBILE && SCROLL_MODE === 'paged') {
     scrollToZone(zones[i].name, { glide: true });
   };
 
-  // can this element (or a parent window body) scroll further in this direction itself?
+  // Is the mouse over a window that scrolls on its own (a long text box)?
+  // 'scroll' = it can still move this way (let it); 'edge' = it's at its top/bottom
+  // (do nothing — scrolling inside a window never moves you to another stop);
+  // null = not over a scrolling window (page the site as usual).
   const innerScroller = (target, dy) => {
     for (let el = target; el && el !== document.body; el = el.parentElement) {
       if (!(el instanceof HTMLElement)) continue;
       const oy = getComputedStyle(el).overflowY;
       if ((oy === 'auto' || oy === 'scroll') && el.scrollHeight > el.clientHeight + 1) {
-        if (dy > 0 && el.scrollTop + el.clientHeight < el.scrollHeight - 1) return true;
-        if (dy < 0 && el.scrollTop > 0) return true;
+        if (dy > 0 && el.scrollTop + el.clientHeight < el.scrollHeight - 1) return 'scroll';
+        if (dy < 0 && el.scrollTop > 0) return 'scroll';
+        return 'edge';
       }
     }
-    return false;
+    return null;
   };
 
   window.addEventListener('wheel', (e) => {
-    if (e.ctrlKey) return; // pinch-zoom
+    if (e.ctrlKey || frozenStop) return; // pinch-zoom, or a full-screen video is open
     const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
-    if (innerScroller(e.target, dy)) return;
+    const inner = innerScroller(e.target, dy);
+    if (inner === 'scroll') return;
     e.preventDefault();
+    if (inner === 'edge') return;
 
     const now = performance.now();
     const quiet = now - lastWheel;
@@ -1462,6 +1491,7 @@ if (!MOBILE && SCROLL_MODE === 'paged') {
 
   // keyboard: arrows / Page Up / Page Down / space (not while typing or using a control)
   window.addEventListener('keydown', (e) => {
+    if (frozenStop) return; // full-screen video: keys belong to the player
     if (e.target.closest?.('input, textarea, select, [contenteditable]')) return;
     const down = ['ArrowDown', 'PageDown'].includes(e.key) || (e.key === ' ' && !e.shiftKey);
     const up = ['ArrowUp', 'PageUp'].includes(e.key) || (e.key === ' ' && e.shiftKey);
@@ -1476,7 +1506,7 @@ if (!MOBILE && SCROLL_MODE === 'paged') {
   window.addEventListener('scroll', () => {
     clearTimeout(settleTimer);
     settleTimer = setTimeout(() => {
-      if (flyingTo) return;
+      if (flyingTo || frozenStop) return;
       const z = zones[currentIndex()];
       if (Math.abs(z.start - window.scrollY) > 2) scrollToZone(z.name, { glide: true });
     }, 220);
@@ -1484,7 +1514,43 @@ if (!MOBILE && SCROLL_MODE === 'paged') {
 }
 
 // --- Resize ------------------------------------------------------------------
+// --- Full-screen video: hold everything still while it's open ------------------
+// Going full screen resizes the browser window, which normally re-lays-out the
+// stops and moves the scroll position — the stop (and the video inside it) would
+// fly away, leaving a black screen. So: freeze on the way in, and on the way out
+// re-measure and land back exactly on the same stop.
+const anyFullscreen = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+
+document.addEventListener('video-fullscreen', () => {
+  if (MOBILE) return;
+  let best = zones[0];
+  zones.forEach((z) => { if (Math.abs(z.start - window.scrollY) < Math.abs(best.start - window.scrollY)) best = z; });
+  frozenStop = best.name;
+  // safety net: if full screen never actually opened, unfreeze
+  setTimeout(() => { if (frozenStop && !anyFullscreen()) unfreeze(); }, 1500);
+});
+
+function unfreeze() {
+  if (!frozenStop || anyFullscreen()) return;
+  const name = frozenStop;
+  frozenStop = null;
+  onResize();
+  const z = zones.find((zone) => zone.name === name);
+  if (!z) return;
+  window.scrollTo({ top: z.start, behavior: 'instant' });
+  camera.position.z = z.cameraZ;
+  targetCameraZ = z.cameraZ;
+  onScroll();
+}
+document.addEventListener('fullscreenchange', unfreeze);
+document.addEventListener('webkitfullscreenchange', unfreeze);
+
 window.addEventListener('resize', () => {
+  if (frozenStop) return; // full-screen video open (see above)
+  onResize();
+});
+
+function onResize() {
   const { w, h } = viewSize();
   sizeRoseView();
   renderer.setSize(w, h);
@@ -1494,7 +1560,7 @@ window.addEventListener('resize', () => {
   layoutHud();
   layoutAbout();
   onScroll();
-});
+}
 
 // --- Animation loop ----------------------------------------------------------
 const growTarget = new THREE.Vector3();

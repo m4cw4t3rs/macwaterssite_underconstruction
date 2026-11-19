@@ -95,6 +95,8 @@ export function initMedia() {
       allowSound();
       if (video.hasAttribute('data-fs-restart')) video.currentTime = 0;
       fsVideo = video;
+      // tell main.js to hold the 3D scene + this stop still while the screen changes size
+      document.dispatchEvent(new CustomEvent('video-fullscreen'));
       video.controls = true;
       setMuted(video, false);
       video.play().catch(() => {});

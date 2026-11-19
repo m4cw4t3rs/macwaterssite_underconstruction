@@ -22,9 +22,10 @@
     <div class="sr-only">
       <h1>mac waters — multimedia composer, violist, and improviser</h1>
       <p>mac waters is a multimedia composer, violist, and improviser based in vermont. a graduate of the dartmouth college mfa in sonic practice, mac composes multichannel and electroacoustic music for concert, installation, and film settings, and works across interactive media and video, extended reality, improvisation, graphic design, and game design.</p>
-      <p>mac’s works have been performed by fonema consort, wet ink, mivos quartet, conrad tao, ostravska banda, and ars futura, and mac has performed as a violist-improviser with tomeka reid’s stringtet and anthony braxton’s creative orchestra.</p>
-      <p>BA Music &amp; Medieval &amp; Renaissance Studies, Columbia University. MFA Sonic Practice, Dartmouth College.</p>
-      <p>work: DreamVisions+, GUIDED_MEDITATIONS, TikTokBox, soloviolarecital, SHOKWII, and concert music including pop song, Justin Bieber — Baby (remix), and erosion as a form of creation.</p>
+      <p>mac’s works have been performed by fonema consort, wet ink, mivos quartet, conrad tao, ostravská banda, and ars futura, and mac has performed as a violist-improviser with tomeka reid’s stringtet and anthony braxton’s creative orchestra.</p>
+      <p>at dartmouth college, mac is the digital technician specialist for the departments of film &amp; media studies and studio art, and previously served as an XR for the humanities fellow at the DREAM Studio (dartmouth resources for emergent arts and media).</p>
+      <p>BA Music &amp; Medieval &amp; Renaissance Studies, Columbia University<br>MFA Sonic Practice, Dartmouth College</p>
+      <p>work: DreamVisions+, GUIDED_MEDITATIONS, LIVE.exe (solo live sets), TikTokBox, soloviolarecital, SHOKWII, and concert music including pop song, Justin Bieber — Baby (remix), and erosion as a form of creation.</p>
       <p>contact: <a href="mailto:macarthur.waters@gmail.com">macarthur.waters@gmail.com</a></p>
     </div>
 
@@ -46,7 +47,7 @@
         <div class="win-body">
           <h2 data-oldlondon>about me 💿🏰🎻</h2>
           <p>mac waters is a multimedia composer, violist, and improviser based in vermont. a graduate of the dartmouth college mfa in sonic practice, mac composes multichannel and electroacoustic music for concert, installation, and film settings, and works across interactive media and video, extended reality, improvisation, graphic design, and game design.</p>
-          <p>mac’s works have been performed by fonema consort, wet ink, mivos quartet, conrad tao, ostravska banda, and ars futura, and mac has performed as a violist-improviser with tomeka reid’s stringtet and anthony braxton’s creative orchestra.</p>
+          <p>mac’s works have been performed by fonema consort, wet ink, mivos quartet, conrad tao, ostravská banda, and ars futura, and mac has performed as a violist-improviser with tomeka reid’s stringtet and anthony braxton’s creative orchestra.</p>
           <p>at dartmouth college, mac is the digital technician specialist for the departments of film &amp; media studies and studio art, and previously served as an XR for the humanities fellow at the DREAM Studio (dartmouth resources for emergent arts and media).</p>
           <p class="details education">BA Music &amp; Medieval &amp; Renaissance Studies, Columbia University<br>
           MFA Sonic Practice, Dartmouth College</p>
@@ -65,10 +66,28 @@
         </div>
         <div class="win-body">
           <ul>
-            <li><b>oct.29</b> — chris sollars "the neighbors" live soundtrack performance, 0102 gallery, hanover nh</li>
             <li><b>feb.tbd</b> — ars memoriae, rauner special collections library, hanover nh</li>
             <li><b>mar.4</b> — dartmouth symphony orchestra, hopkins center for the arts, hanover nh</li>
             <li><b>apr.12</b> — tomeka reid stringtet @ levine music school gala, washington dc </li>
+          </ul>
+          <!-- opens past.txt (it starts closed) -->
+          <p class="past-link"><button type="button" class="link-btn" data-open="past-window">past shows ↗</button></p>
+        </div>
+      </div>
+
+      <!-- Third window: past shows. Starts CLOSED; the "past shows ↗" link in upcoming.txt opens it.
+           Move a line here from upcoming.txt once it's happened (newest at the top). -->
+      <div class="win-window news-window past-window closed" id="past-window" data-start-closed data-drag>
+        <div class="win-titlebar" data-drag-handle>
+          <span>past.txt</span>
+          <span class="win-buttons" aria-hidden="true">
+            <span class="win-btn">_</span><span class="win-btn">&#9633;</span>
+          </span>
+          <button class="win-btn" data-close aria-label="close this window">&times;</button>
+        </div>
+        <div class="win-body">
+          <ul>
+            <li><b>oct.29</b> — chris sollars “the neighbors” live soundtrack performance, 0102 gallery, hanover nh</li>
           </ul>
         </div>
       </div>
@@ -134,14 +153,14 @@
           </span>
           <span class="desk-label">Book of Hours</span>
         </div>
-        <div class="desk-icon" role="button" tabindex="0" data-nav="tiktokbox" data-year="[2022/2024]" data-blurb="multichannel performance/installation that uses a motion-sensing body suit to distort and livemix doomscrolling in real time across two giant vertical phone screens and 13.1 spatialized audio." data-drag data-fly="up" style="--delay: 0.24s;">
+        <div class="desk-icon" role="button" tabindex="0" data-nav="tiktokbox" data-year="[2022/2024]" data-blurb="multichannel performance/installation that uses a motion-sensing body suit to distort and livemix doomscrolling in real time across two giant vertical phone screens and spatialized audio." data-drag data-fly="up" style="--delay: 0.24s;">
           <span class="desk-thumb">
             <span class="icon-ph" aria-hidden="true"></span>
             <img src="/media/thumbs/tiktokbox.png" alt="" draggable="false" onload="this.parentElement.classList.add('has-img')" onerror="this.remove()">
           </span>
           <span class="desk-label">TikTokBox</span>
         </div>
-        <div class="desk-icon" role="button" tabindex="0" data-nav="violarecital" data-year="[2024]" data-blurb="fixed media motion capture improvised viola performance" data-drag data-fly="up" style="--delay: 0.32s;">
+        <div class="desk-icon" role="button" tabindex="0" data-nav="violarecital" data-year="[2024]" data-blurb="a motion-captured improvisational viola performance becomes the basis for a fixed-media 3D-animation work. " data-drag data-fly="up" style="--delay: 0.32s;">
           <span class="desk-thumb">
             <span class="icon-ph" aria-hidden="true">🎻</span>
             <img src="/media/thumbs/violarecital.png" alt="" draggable="false" onload="this.parentElement.classList.add('has-img')" onerror="this.remove()">
@@ -181,7 +200,7 @@
         </div>
         <div class="win-body" style="max-height: 50vh;">
           <h2>DreamVisions+ <span class="year">[2025-ongoing]</span></h2>
-          <p>a transdigital, transhistorical odyssey into the realm of fiction and truth, reality and virtuality. rooted in late medieval dream-vision poems (Chaucer’s <i>House of Fame</i>, Langland’s <i>Piers Plowman</i>, the <i>Roman de la Rose</i>), DreamVisions+ reads these psychedelic allegories as proto-VR and stages a multimedia dream vision of the digital age: an expansive intermedia universe spanning live performance, immersive projection, game, and installation. in <i>DreamVisions+_WALLED_GARDEN.exe</i>, visitors boot up a lost-to-time video game on a CRT, where an anthropomorphized rose explores a walled garden, conversing with Lady Reason, Diversion, and Idleness.</p>
+          <p>a transdigital, transhistorical odyssey into the realm of fiction and truth, reality and virtuality. rooted in late medieval dream-vision poems (Chaucer’s <i>House of Fame</i>, Langland’s <i>Piers Plowman</i>, the <i>Roman de la Rose</i>), DreamVisions+ reads these psychedelic allegories as proto-VR and stages a multimedia dream vision of the digital age: an expansive intermedia universe spanning live performance, immersive projection, game, and installation. <br><br> <i>DreamVisions+_WALLED_GARDEN.exe</i> takes the form of a lost-to-time CD-ROM game, maybe found in a dusty cereal box from 1998, running on a CRT television in your friend’s finished basement living room. In the game, you play as an anthropomorphic rose awakened inside of a walled garden, a locale stolen from the thirteenth-century Romance of the Rose. (The title also nods to the tech term: a “walled garden” is a closed digital ecosystem where one company controls hardware, software, and data). The garden is populated by various allegorical figures—such as Idleness, Diversion, and Lady Reason—who impart various nuggets of wisdom to you as you explore the retro medieval dreamworld. The game features original 3D models as well as artwork from illuminated manuscripts, text from the medieval source material as well as original dialogue, and original music and sound effects.</p>
           <!-- works lines: <i>Title</i> (Year), medium, site — one per line, joined with <br> -->
           <p class="details"><i>DreamVisions+</i> [2025], workshop performance, DREAM Studio, Dartmouth College<br><br>
           <i>DreamVisions+_WALLED_GARDEN.exe</i> [2026], interactive game installation, <a href="https://studioart.dartmouth.edu/news/2026/10/hours-works-vac-staff" target="_blank" rel="noopener">Off Hours</a>, Nearburg Gallery, Hanover, NH</p>
@@ -286,7 +305,7 @@
         </div>
         <div class="win-body">
           <h2>GUIDED_MEDITATIONS <span class="year">[2024-ongoing]</span></h2>
-          <p>a series of video meditations for scrolling: guides to entering the digital stream with reverence for the Algorithm. 🧘☮️📲 time-stretched AI voices lead the listener through a “fourteen day cybermindfulness enlightenment journey," with original electronic music, viola improvisation, and Hi-8 video tapes as well as 3D animations built in Unity.</p>
+          <p>a series of video meditations for scrolling: guides to entering the digital stream with reverence for the Algorithm. 🧘☮️📲 time-stretched AI voices lead the listener through a “fourteen-day cybermindfulness enlightenment journey,” with original electronic music, viola improvisation, and Hi-8 video tapes as well as 3D animations built in Unity.</p>
           <!-- works lines: <i>Title</i> (Year), medium, site — one per line, joined with <br> -->
           <p class="details"><i>GUIDED_MEDITATION_1</i> [2024], Hi-8 video<br><br>
           <i>GUIDED_MEDITATION_2</i> [2026], electroacoustic performance with video and 3D animation, <a href="https://unprofessionalvarietyshow.com" target="_blank" rel="noopener">Unprofessional Variety Show</a>, New York, NY</p>
@@ -306,23 +325,29 @@
           <button class="win-btn" data-close aria-label="close this window">&times;</button>
         </div>
         <div class="win-body">
-          <h2>LIVE.exe <span class="year">[ongoinmg]</span></h2>
-          <p>electroacoustic solo sets featuring amplified viola & voice with synthesizers, performed with ableton push</p>
+          <h2>LIVE.exe <span class="year">[ongoing]</span></h2>
+          <p>electroacoustic solo sets featuring amplified viola & voice with synthesizers, performed with Ableton Push.</p>
           <!-- works lines: <i>Title</i> (Year), medium, site — one per line, joined with <br> -->
-          <p class="details"> august 2025, solo live set, main street museum, white river junction, vt</p>
+          <p class="details"><i>LIVE.exe</i> [2025], solo live set, Main Street Museum, White River Junction, VT</p>
         </div>
       </div>
 
-      <!-- The performance video. When it's ready, replace the placeholder with:
-           <video src="/media/live/live-set.mp4" poster="/media/live/live-set-poster.jpg"
-                  muted loop playsinline preload="none" data-sound-group="live" aria-label="live solo set"></video> -->
+      <!-- The set: one window, a button per song (add/remove buttons freely).
+           Files live in public/media/live/ -->
       <div class="win-window pair-vid" data-drag data-resize data-fly="right" style="top: 30%; --delay: 0.12s;">
         <div class="win-titlebar" data-drag-handle>
           <span>live_set.mp4</span>
           <button class="win-btn" data-close aria-label="close this window">&times;</button>
         </div>
-        <div class="win-body media">
-          <div class="media-ph">live set video<br>public/media/live/</div>
+        <div class="win-body media clips" data-clips>
+          <video src="/media/live/intro.mp4" poster="/media/live/intro-poster.jpg"
+                 muted loop playsinline preload="none" data-sound-group="live" aria-label="live solo set at Main Street Museum"></video>
+          <div class="clip-tabs" role="group" aria-label="choose a song">
+            <button class="player-btn clip-tab active" data-src="/media/live/intro.mp4" data-poster="/media/live/intro-poster.jpg">intro</button>
+            <button class="player-btn clip-tab" data-src="/media/live/haveyoueverhadadream.mp4" data-poster="/media/live/haveyoueverhadadream-poster.jpg">haveyoueverhadadream</button>
+            <button class="player-btn clip-tab" data-src="/media/live/swimming.mp4" data-poster="/media/live/swimming-poster.jpg">swimming</button>
+            <button class="player-btn clip-tab" data-src="/media/live/chorus.mp4" data-poster="/media/live/chorus-poster.jpg">chorus</button>
+          </div>
         </div>
       </div>
     </section>
@@ -370,28 +395,25 @@
           <h2>TikTokBox <span class="year">[2022/2024]</span></h2>
           <p>a live improvised performance that turns my TikTok For You Page into a well of audiovisual material. custom Max/MSP/Jitter patches distort my phone’s live feed across two ten-foot screens and a 13-channel spatial audio array, while a motion-sensing Arduino bodysuit lets my whole body, not just my scrolling thumb, play the feed. a duet between a user and their feed: the individual and the collective, the conscious and the subconscious.</p>
           <!-- works lines: <i>Title</i> (Year), medium, site — one per line, joined with <br> -->
-          <p class="details"><i>TikTokBox</i> (2024), live audiovisual performance, <a href="https://hop.dartmouth.edu/events/mac-waters" target="_blank" rel="noopener">Dartmouth College New Music Festival</a>, Hanover, NH</p>
+          <p class="details"><i>TikTokBox</i> [2024], live audiovisual performance, <a href="https://hop.dartmouth.edu/events/mac-waters" target="_blank" rel="noopener">Dartmouth College New Music Festival</a>, Hanover, NH</p>
         </div>
       </div>
-      <!-- Performance sections: one window, click the video to skip to the next section.
-           Files live in public/media/tiktokbox/ (add/remove names in data-sources + data-posters). -->
+      <!-- Performance excerpts: one window, a button per excerpt (add/remove buttons freely).
+           Files live in public/media/tiktokbox/ -->
       <div class="win-window pair-vid" data-drag data-resize data-fly="right" style="top: 30%; --delay: 0.12s;">
         <div class="win-titlebar" data-drag-handle>
-          <span>tiktokbox.mp4 <span class="cycle-count"></span></span>
-          <span class="sound-badge" aria-hidden="true">🔇</span>
+          <span>tiktokbox.mp4</span>
           <button class="win-btn" data-close aria-label="close this window">&times;</button>
         </div>
-        <div class="win-body media">
+        <div class="win-body media clips" data-clips>
           <video src="/media/tiktokbox/part-1.mp4" poster="/media/tiktokbox/part-1-poster.jpg"
-                 data-cycle
-                 data-sources="/media/tiktokbox/part-1.mp4 /media/tiktokbox/part-2.mp4 /media/tiktokbox/part-3.mp4 /media/tiktokbox/part-4.mp4"
-                 data-posters="/media/tiktokbox/part-1-poster.jpg /media/tiktokbox/part-2-poster.jpg /media/tiktokbox/part-3-poster.jpg /media/tiktokbox/part-4-poster.jpg"
-                 muted playsinline preload="none" data-sound-group="tiktokbox"
-                 aria-label="TikTokBox performance (click to skip to the next section)"></video>
-          <div class="sound-hint cycle-hint" aria-hidden="true">
-            <span class="hint-before">🔈 click for sound</span>
-            <span class="hint-hover">🔈 hover for sound · click to skip ⏭</span>
-            <span class="hint-tap">🔈 tap for sound, tap again to skip</span>
+                 muted loop playsinline preload="none" data-sound-group="tiktokbox"
+                 aria-label="TikTokBox performance (excerpt)"></video>
+          <div class="clip-tabs" role="group" aria-label="choose an excerpt">
+            <button class="player-btn clip-tab active" data-src="/media/tiktokbox/part-1.mp4" data-poster="/media/tiktokbox/part-1-poster.jpg">excerpt 1</button>
+            <button class="player-btn clip-tab" data-src="/media/tiktokbox/part-2.mp4" data-poster="/media/tiktokbox/part-2-poster.jpg">excerpt 2</button>
+            <button class="player-btn clip-tab" data-src="/media/tiktokbox/part-3.mp4" data-poster="/media/tiktokbox/part-3-poster.jpg">excerpt 3</button>
+            <button class="player-btn clip-tab" data-src="/media/tiktokbox/part-4.mp4" data-poster="/media/tiktokbox/part-4-poster.jpg">excerpt 4</button>
           </div>
         </div>
       </div>
@@ -416,7 +438,7 @@
           <h2>soloviolarecital <span class="year">[2024]</span></h2>
           <p>a freely improvised viola solo, captured by a 16-camera OptiTrack motion capture system, becomes the animation for an avatar on a virtual soundstage. as the improvisation builds and the camera closes in, the digital underbelly surfaces: textures dissolve to a grey humanoid model, the skeleton pokes through, fingers fall out of sync, the bow pierces the instrument. then the sound stops, and the video snaps to the real me, making eye contact with the camera.</p>
           <!-- works lines: <i>Title</i> (Year), medium, site — one per line, joined with <br> -->
-          <p class="details"><i>soloviolarecital</i> (2024), motion capture video, DREAM Studio, Dartmouth College</p>
+          <p class="details"><i>soloviolarecital</i> [2024], motion capture video, DREAM Studio, Dartmouth College</p>
         </div>
       </div>
       <div class="win-window pair-vid" data-drag data-resize data-fly="right" style="top: 35%; --delay: 0.12s;">
@@ -444,7 +466,7 @@
           <h2>SHOKWII <span class="year">[2023]</span></h2>
           <p>locked behind a decade-old password is an archive of videos made by a hyperactive ten-year-old with an internet connection and a webcam: Shokwii101, the YouTube channel I hosted in 2010. SHOKWII collages, distorts, and remixes that archive, using YouTube itself as an instrument, into a dance sequence, a housephone montage, a commercial break, and a collapse. built around failed virality, awkward silences, and low view counts, it is of me but not about me.</p>
           <!-- works lines: <i>Title</i> (Year), medium, site — one per line, joined with <br> -->
-          <p class="details"><i>SHOKWII</i> (2023), film (20 min), (A)TEMPORALITIES showcase, Hanover, NH</p>
+          <p class="details"><i>SHOKWII</i> [2023], film (20 min), (A)TEMPORALITIES showcase, Hanover, NH</p>
         </div>
       </div>
       <div class="win-window pair-vid" data-drag data-resize data-fly="right" style="top: 36%; --delay: 0.12s;">
@@ -479,10 +501,10 @@
           <h2>Film Scoring</h2>
           <!-- credits: <i>Title</i> (Year), medium, dir./prod. Name, site — newest first -->
           <ul class="works-list">
-            <li><i>Ten Seconds</i> (2027, forthcoming), short film, prod. Jay MacNamee (formerly <i>Do I Look Like Your Wife?</i>)</li>
-            <li><i>PIG</i> (forthcoming), film, dir. Kaley Mamo</li>
-            <li><i>Old Man River</i> (2026), short documentary, dir. Iyabo Kwayana, world premiere, <a href="https://blackstarprojects.org/festival/2026/films/old-man-river" target="_blank" rel="noopener">BlackStar Film Festival</a>, Philadelphia, PA</li>
-            <li><i>Sankyo Stream</i> (2019–2022), experimental web series, dir. Fergus Campbell, music for two episodes, <a href="https://gamethefinch.com/sankyo-stream" target="_blank" rel="noopener">gamethefinch.com</a></li>
+            <li><i>Ten Seconds</i> [2027, forthcoming], short film, prod. Jay MacNamee (formerly <i>Do I Look Like Your Wife?</i>)</li>
+            <li><i>PIG</i> [forthcoming], film, dir. Kaley Mamo</li>
+            <li><i>Old Man River</i> [2026], short documentary, dir. Iyabo Kwayana, world premiere, <a href="https://blackstarprojects.org/festival/2026/films/old-man-river" target="_blank" rel="noopener">BlackStar Film Festival</a>, Philadelphia, PA</li>
+            <li><i>Sankyo Stream</i> [2019–2022], experimental web series, dir. Fergus Campbell, music for two episodes, <a href="https://gamethefinch.com/sankyo-stream" target="_blank" rel="noopener">gamethefinch.com</a></li>
           </ul>
         </div>
       </div>
@@ -498,7 +520,7 @@
         </div>
         <div class="win-body">
           <h2>Concert Music</h2>
-          <p>my scored concert works are playful, theatrical compositions that often provide spaces for sonic exploration between improvisation and strict notation, between electronic and acoustic sound worlds. i find myself interested in sonic memory, genre & pastiche, and underlying assumptions re: traditional classsical performance practice.</p>
+          <p>my scored concert works are playful, theatrical compositions that often provide spaces for sonic exploration between improvisation and strict notation, between electronic and acoustic sound worlds. I find myself interested in sonic memory, genre & pastiche, and underlying assumptions re: traditional classical performance practice.</p>
           <!-- works lines: <i>Title</i> [Year], instrumentation, performers — one per line, joined with <br><br> -->
           <p class="details"><i>pop song</i> [2022], solo piano and electronics, performed by Conrad Tao<br><br>
           <i>Justin Bieber — Baby (remix)</i> [2019], trombone, french horn, percussion, and electronics, performed by Ian Antonio, Weston Olencki, and Laura Weiner (members of the Wet Ink Large Ensemble)<br><br>
@@ -529,9 +551,9 @@
             <button class="player-btn" data-act="next" aria-label="next page">▶</button>
           </div>
           <ul class="book-scores" hidden>
-            <li data-title="pop song (2022)" data-folder="/media/composition/scores/pop-song/" data-pages="12" data-orientation="landscape" data-pdf="/media/composition/scores/pop-song/score.pdf"></li>
-            <li data-title="Justin Bieber — Baby (remix) (2019)" data-folder="/media/composition/scores/baby-remix/" data-pages="15" data-pdf="/media/composition/scores/baby-remix/score.pdf"></li>
-            <li data-title="erosion as a form of creation (2019)" data-folder="/media/composition/scores/erosion/" data-pages="30" data-orientation="landscape" data-pdf="/media/composition/scores/erosion/score.pdf"></li>
+            <li data-title="pop song [2022]" data-folder="/media/composition/scores/pop-song/" data-pages="12" data-orientation="landscape" data-pdf="/media/composition/scores/pop-song/score.pdf"></li>
+            <li data-title="Justin Bieber — Baby (remix) [2019]" data-folder="/media/composition/scores/baby-remix/" data-pages="15" data-pdf="/media/composition/scores/baby-remix/score.pdf"></li>
+            <li data-title="erosion as a form of creation [2019]" data-folder="/media/composition/scores/erosion/" data-pages="30" data-orientation="landscape" data-pdf="/media/composition/scores/erosion/score.pdf"></li>
           </ul>
         </div>
       </div>
@@ -597,7 +619,7 @@
       </button>
       <div class="tb-tasks"></div>
       <div class="tb-tray">
-        <span title="site under construction" aria-label="site under construction">🚧</span>
+        <span class="tray-castle" title="Dream. Share. Connect." aria-label="Dream. Share. Connect.">🏰</span>
         <span class="tb-clock"></span>
       </div>
     </div>
