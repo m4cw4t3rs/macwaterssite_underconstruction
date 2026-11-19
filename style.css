@@ -1720,9 +1720,9 @@ html.mobile .sm-has-sub {
   flex-wrap: wrap;
 }
 
-html.mobile .sm-submenu {
+html.mobile #start-menu .sm-submenu {
   position: static;
-  flex-basis: 100%;
+  flex: 0 0 100%; /* its own full-width row under "work" (beats the "#start-menu ul" rule) */
   min-width: 0;
   border: 0;
   box-shadow: none;
